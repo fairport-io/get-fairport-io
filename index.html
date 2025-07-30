@@ -1,3 +1,209 @@
 #!/bin/bash
 
-echo "Hello from your friends at fairport.io!"
+info () { echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [INFO    ] (${FUNCNAME[1]}) $@" | tr '\n' ' '; echo ""; }
+warn () { echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [WARNING ] (${FUNCNAME[1]}) $@" | tr '\n' ' '; echo ""; }
+crit () { echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [CRITICAL] (${FUNCNAME[1]}) $@" | tr '\n' ' '; echo ""; exit 1; }
+
+run_cmd () {
+    local CMD="$*"
+    info "Running: ${CMD}"
+    set -o pipefail
+    (eval "$CMD" 2>&1) | while IFS= read -r LINE; do
+        info "$LINE"
+    done
+    EXIT_CODE=${PIPESTATUS[0]}
+    set +o pipefail
+    info "Command completed with exit code: ${EXIT_CODE}"
+    [ ${EXIT_CODE} -ne 0 ] && crit "Failed to run, see above for details"
+}
+
+check_debug () {
+    [ "${FP_DEBUG}" = "true" ] && set -x
+}
+
+check_dependencies () {
+    [ "$EUID" != "0" ] && crit "Re-run as root or with sudo"
+    command -v curl &> /dev/null || crit "Requirement 'curl' is not installed on this machine, please install and re-run."
+}
+
+check_variables () {
+    if ! [ "$FP_CLUSTER_TOKEN" ]; then
+        warn "Environment variable 'FP_CLUSTER_TOKEN' is not set."
+        warn "Setup will use 'unmanaged' mode"
+        warn "You can obtain a token from https://fairport.io"
+        warn "If you have a token you can set it with 'export FP_CLUSTER_TOKEN=<YOUR_TOKEN>'"
+    else
+        info "Setup will use 'managed' mode"
+    fi
+    MODE="$FP_MODE"
+    OS="$(uname)"
+    ARCH="$(uname -m)"
+    echo "$ARCH" | egrep -q "amd64|x86_64" && ARCH="amd64"
+    echo "$ARCH" | egrep -q "arm64|aarch64" && ARCH="arm64"
+    K0S_VERSION="v1.33.2+k0s.0"
+    K0S_VERSION_DOCKER=$(echo $K0S_VERSION | tr '+' '-')
+    BUNDLE_FILE="/var/lib/k0s/images/fp-bundle.tar.gz"
+    BUNDLE_URL="https://github.com/k0sproject/k0s/releases/download/v1.33.2%2Bk0s.0/k0s-${K0S_VERSION}-${ARCH}"
+    K0S_BINARY_FILE="/usr/local/bin/k0s"
+    K0S_BINARY_URL="https://github.com/k0sproject/k0s/releases/download/v1.33.2%2Bk0s.0/k0s-${K0S_VERSION}-${ARCH}"
+}
+
+k0s_same_version () {
+    local CURRENT_VERSION
+    CURRENT_VERSION=$(k0s version 2>&1)
+    [ "$CURRENT_VERSION" = "$K0S_VERSION" ]
+}
+
+k0s_is_healthy () {
+    local CMD="k0s kubectl -n kube-system wait pod --all --for=condition=Ready"
+    if [ "${FUNCNAME[2]}" = "install_using_docker" ]; then
+        CMD="docker exec k0s ${CMD}"
+    fi
+    local STATUS
+    STATUS=$(timeout 8 $CMD 2>&1)
+}
+
+wait_for_k0s_ready () {
+    local MAX_RETRIES=60
+    while ! k0s_is_healthy; do
+        [ $MAX_RETRIES -le 0 ] && crit "Containers in kube-system didn't start, refer to documentation: TODO"
+        info "Waiting for all containers in kube-system to start ($MAX_RETRIES retries left)"
+        MAX_RETRIES=$(($MAX_RETRIES - 1))
+        sleep 3
+    done
+}
+
+install_using_docker () {
+    if docker ps -f "name=k0s"  | grep -q "k0s$"; then
+        info "A k0s container is already running"
+    else
+        [ "${ARCH}" = "arm64" ] && DOCKER_ARGS="-e ETCD_UNSUPPORTED_ARCH=arm"
+        [ "$HOST_MOUNT_VAR_LIB_K0S" ] || HOST_MOUNT_VAR_LIB_K0S="/var/lib/k0s"
+        run_cmd docker run \
+            -d \
+            -it \
+            --rm \
+            --name k0s \
+            --hostname k0s \
+            --privileged \
+            --cgroupns=host \
+            --pid=host \
+            -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+            -v ${HOST_MOUNT_VAR_LIB_K0S}:/var/lib/k0s \
+            -p 6443:6443 \
+            ${DOCKER_ARGS} \
+            docker.io/k0sproject/k0s:${K0S_VERSION_DOCKER} \
+            k0s controller --enable-worker --no-taints
+    fi
+
+    mkdir -p ~/.kube
+    sleep 5
+    local MAX_RETRIES=5
+    while ! kubectl get nodes &>/dev/null; do
+        info "Attempt to get the kubeconfig from the k0s container (Attempts left: $MAX_RETRIES)"
+        docker exec k0s k0s kubeconfig admin > ~/.kube/config
+        MAX_RETRIES=$(($MAX_RETRIES - 1))
+        sleep 5
+    done
+    [ $? -ne 0 ] && crit "Failed to save kubeconfig"
+
+    wait_for_k0s_ready
+}
+
+install_kubernetes () {
+    if [ "$CLOUD_SHELL" = "true" ]; then
+        info "This is probably a google cloud shell machine, use docker installation method"
+        # The home partition is small and others have noexec by default so use memory
+        HOST_MOUNT_VAR_LIB_K0S="/tmp/k0s"
+        mkdir -p /tmp/k0s
+        mount -t tmpfs -o size=8G tmpfs /tmp/k0s
+        install_using_docker
+        return 0
+    fi
+
+    EXISTING_K0S_VERSION=$(k0s version 2>&1)
+    if [ "$EXISTING_K0S_VERSION" != "$K0S_VERSION" ]; then
+        [ ! -f "$K0S_BINARY_FILE" ] && info "Installing k0s ($K0S_VERSION) from $K0S_BINARY_URL to $K0S_BINARY_FILE"
+        [ -f "$K0S_BINARY_FILE" ] && info "Upgrading k0s ($K0S_VERSION) from $K0S_BINARY_URL to $K0S_BINARY_FILE"
+        curl -sL $K0S_BINARY_URL -o $K0S_BINARY_FILE
+        [ $? -ne 0 ] && crit "Failed to download $K0S_BINARY_URL to $K0S_BINARY_FILE"
+        chmod +x $K0S_BINARY_FILE
+        [ $? -ne 0 ] && crit "Failed to make $K0S_BINARY_FILE executable"
+    fi
+
+    info "Install fpk"
+    echo -e '#!/bin/bash\n\nk0s kubectl $@' > /usr/local/bin/fpk
+    [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fpk"
+    chmod +x /usr/local/bin/fpk
+    [ $? -ne 0 ] && crit "Failed to make /usr/local/bin/fpk executable"
+
+    info "Installing k0s"
+    k0s install controller --enable-worker --no-taints || crit "Failed to install k0s controller"
+
+    info "Starting k0s"
+    k0s start || crit "Failed to start k0s"
+
+    info "Waiting for k0s to be ready"
+    wait_for_k0s_ready
+}
+
+install_fp_components () {
+    # Idempotent install of fp components
+    info "TODO"
+}
+
+install_bundle () {
+    if [ -f "$BUNDLE_FILE" ]; then
+        info "Bundle file $BUNDLE_FILE already exists, skipping download"
+        return 0
+    fi
+
+    info "Download bundle for installation to $BUNDLE_FILE"
+
+    mkdir -p $(dirname $BUNDLE_FILE)
+    [ $? -ne 0 ] && crit "Failed to create $(dirname $BUNDLE_FILE)"
+
+    curl -sL $BUNDLE_URL -o $BUNDLE_FILE
+    [ $? -ne 0 ] && crit "Failed to download $BUNDLE_URL to $BUNDLE_FILE"
+}
+
+install () {
+    if k0s_is_healthy && k0s_same_version; then
+        info "K0s is already installed and the correct version is running"
+        return 0
+    fi
+
+    install_bundle
+    install_kubernetes
+    install_fp_components
+}
+
+stop () {
+    info "Stopping k0s"
+    k0s stop &>/dev/null || true
+    docker exec k0s k0s stop &>/dev/null || true
+    exit 0
+}
+
+cleanup () {
+    info "Stop k0s"
+    k0s stop &>/dev/null || true
+    docker exec k0s k0s stop &>/dev/null || true
+    info "Reset k0s"
+    k0s reset &>/dev/null || true
+    docker exec k0s k0s reset &>/dev/null || true
+    docker stop k0s &> /dev/null || true 
+    info "Done"
+    exit 0
+}
+
+main () {
+    check_debug
+    check_dependencies
+    echo "$@" | grep -q -- "cleanup" && cleanup
+    echo "$@" | grep -q -- "stop" && stop
+    check_variables
+    install
+}
+
+main "$@"
