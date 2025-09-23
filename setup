@@ -71,11 +71,12 @@ k8s_is_healthy () {
 }
 
 wait_for_k8s_ready () {
-    local MAX_RETRIES=10
+    local MAX_RETRIES=$1
     while ! k8s_is_healthy; do
         [ $MAX_RETRIES -le 0 ] && crit "Containers in kube-system didn't start, refer to documentation: TODO"
         info "Waiting for all containers in kube-system to start ($MAX_RETRIES retries left)"
         MAX_RETRIES=$(($MAX_RETRIES - 1))
+        sleep 1
     done
 }
 
@@ -101,7 +102,7 @@ install_kubernetes () {
     run_cmd chmod +x /usr/local/bin/fpk
 
     info "Waiting for k8s to be ready"
-    wait_for_k8s_ready
+    wait_for_k8s_ready 120
 }
 
 install_fp_components () {
