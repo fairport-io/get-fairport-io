@@ -80,6 +80,20 @@ wait_for_k8s_ready () {
     done
 }
 
+generate_rke2_config () {
+    info "Generating rke2 config file"
+    local NODE_NAME=$(cat /etc/machine-id 2>/dev/null) || NODE_NAME=$(date | md5sum | cut -d ' ' -f1)
+    mkdir -p /etc/rancher/rke2
+    cat << EOF > /etc/rancher/rke2/config.yaml
+write-kubeconfig-mode: "0644"
+node-name: "$NODE_NAME"
+cluster-cidr: "100.64.0.0/12"
+service-cidr: "100.80.0.0/12"
+etcd-expose-metrics: true
+etcd-arg: "quota-backend-bytes=8589934592"
+EOF
+}
+
 install_kubernetes () {
     EXISTING_RKE2_VERSION=$(rke2 --version 2>&1 | grep -o "v[0-9]\S*")
     if [ "$EXISTING_RKE2_VERSION" != "$RKE2_VERSION" ]; then
@@ -90,6 +104,7 @@ install_kubernetes () {
         run_cmd tar -xf $RKE2_BINARIES_BUNDLE_FILE -C $RKE2_BINARIES_DIR/$RKE2_VERSION
         run_cmd cp $RKE2_BINARIES_DIR/$RKE2_VERSION/bin/* /usr/local/bin/
         run_cmd cp $RKE2_BINARIES_DIR/$RKE2_VERSION/lib/systemd/system/rke2* /etc/systemd/system/
+        generate_rke2_config
     fi
 
     run_cmd systemctl daemon-reload
