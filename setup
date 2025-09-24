@@ -140,7 +140,10 @@ stop () {
 
 uninstall () {
     info "Uninstall k8s"
-    run_cmd /usr/local/bin/rke2-uninstall.sh
+    run_cmd /usr/local/bin/rke2-uninstall.sh || true
+    run_cmd rm -rf /var/lib/rancher || true
+    run_cmd rm -rf /etc/rancher || true
+    run_cmd rm -rf /usr/local/bin/rke*
     exit 0
 }
 
