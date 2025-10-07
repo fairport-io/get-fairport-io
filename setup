@@ -57,6 +57,8 @@ check_variables () {
     RKE2_BINARIES_DIR="/var/lib/rancher/rke2/bin"
     RKE2_BINARIES_BUNDLE_FILE="${RKE2_BINARIES_DIR}/rke2.${OS}-${ARCH}-${RKE2_VERSION}.tar.gz"
     RKE2_BINARY_FILE="/usr/local/bin/rke2"
+    RKE2_KUBECONFIG="/etc/rancher/rke2/rke2.yaml"
+    [ "$RKE2_TYPE" = "agent" ] && RKE2_KUBECONFIG="/var/lib/rancher/rke2/agent/rke2controller.kubeconfig"
 }
 
 k8s_same_version () {
@@ -123,7 +125,7 @@ install_kubernetes () {
 
     info "Install fpk"
     run_cmd mkdir -p /usr/local/bin
-    echo -e '#!/bin/bash\n\n/var/lib/rancher/rke2/bin/kubectl --kubeconfig=/etc/rancher/rke2/rke2.yaml $*' > /usr/local/bin/fpk
+    echo -e "#!/bin/bash\n\n/var/lib/rancher/rke2/bin/kubectl --kubeconfig=$KUBECONFIG $*" > /usr/local/bin/fpk
     [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fpk"
     run_cmd chmod +x /usr/local/bin/fpk
 
