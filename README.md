@@ -2,7 +2,7 @@
 
 ## Install
 
-### Create a New Cluster
+### Create A New Cluster
 
 ```shell
 curl https://get.fairport.io | sudo bash -
