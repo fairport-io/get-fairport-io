@@ -3,11 +3,13 @@
 ## Install
 
 ### Server / Control-Plane Mode
+
 ```shell
 curl https://get.fairport.io | sudo bash -
 ```
 
 ### Agent / Worker Mode
+
 ```shell
 export RKE2_TYPE=""   # Options: agent|server
 export RKE2_SERVER="" # Format: 'https://<SERVER_IP>:9345' where <SERVER_IP> is an ip of an existing server node
@@ -16,6 +18,7 @@ curl https://get.fairport.io | sudo bash -
 ```
 
 ## Uninstall
+
 ```shell
 curl https://get.fairport.io/ | sudo bash -s -- uninstall
 ```
