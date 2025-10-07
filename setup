@@ -150,6 +150,7 @@ spec:
       enabled: false
     opentelemetry-collector:
       enabled: false
+EOF
 }
 
 install_fp_components () {
