@@ -1,14 +1,14 @@
 # get-fairport-io
 
-## Install
+# Install
 
-### Create A New Cluster
+## Create A New Cluster
 
 ```shell
 curl https://get.fairport.io | sudo bash -
 ```
 
-### Add Node To Existing Cluster
+## Add Node To Existing Cluster
 
 ```shell
 export RKE2_TYPE=""   # Options: [agent|server] where server is a control-plane node or agent is a worker
@@ -17,7 +17,7 @@ export RKE2_TOKEN=""  # The content of /var/lib/rancher/rke2/server/node-token f
 curl https://get.fairport.io | sudo bash -
 ```
 
-## Uninstall
+# Uninstall
 
 ```shell
 curl https://get.fairport.io/ | sudo bash -s -- uninstall
