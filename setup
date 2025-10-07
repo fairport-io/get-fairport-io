@@ -125,7 +125,7 @@ install_kubernetes () {
 
     info "Install fpk"
     run_cmd mkdir -p /usr/local/bin
-    echo -e "#!/bin/bash\n\n/var/lib/rancher/rke2/bin/kubectl --kubeconfig=$RKE2_KUBECONFIG $*" > /usr/local/bin/fpk
+    echo -e "#!/bin/bash\n\n/var/lib/rancher/rke2/bin/kubectl --kubeconfig=$RKE2_KUBECONFIG \$*" > /usr/local/bin/fpk
     [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fpk"
     run_cmd chmod +x /usr/local/bin/fpk
 
