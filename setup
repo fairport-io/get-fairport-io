@@ -35,6 +35,13 @@ check_variables () {
     else
         info "Setup will use 'managed' mode"
     fi
+    if echo "$RKE2_TYPE" | egrep -q "server|agent"; then
+        export INSTALL_RKE2_TYPE="$RKE2_TYPE"
+        [ "$RKE2_SERVER" ] || crit "Environment variable 'RKE2_SERVER' must be set when RKE2_TYPE is 'agent'. It should contain the IP of an existing server node, e.g. 'https://<SERVER_IP>:9345'"
+        [ "$RKE2_TOKEN"  ] || crit "Environment variable 'RKE2_TOKEN' must be set when RKE2_TYPE is 'agent'.  It can be retrieved from an existing server node with 'cat /var/lib/rancher/rke2/server/node-token'"
+    else
+        RKE2_TYPE="server"
+    fi
     MODE="$FP_MODE"
     OS="$(uname | tr '[:upper:]' '[:lower:]')"
     ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
@@ -92,6 +99,8 @@ service-cidr: "100.80.0.0/12"
 etcd-expose-metrics: true
 etcd-arg: "quota-backend-bytes=8589934592"
 EOF
+    [ "$RKE2_TYPE" = "agent" ] && echo "server: $RKE2_SERVER" >> /etc/rancher/rke2/config.yaml
+    [ "$RKE2_TYPE" = "agent" ] && echo "token: $RKE2_TOKEN" >> /etc/rancher/rke2/config.yaml
 }
 
 install_kubernetes () {
@@ -108,8 +117,8 @@ install_kubernetes () {
     fi
 
     run_cmd systemctl daemon-reload
-    run_cmd systemctl enable rke2-server.service
-    run_cmd systemctl start rke2-server.service
+    run_cmd systemctl enable rke2-$RKE2_TYPE.service
+    run_cmd systemctl start rke2-$RKE2_TYPE.service
 
     info "Install fpk"
     run_cmd mkdir -p /usr/local/bin
