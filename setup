@@ -142,7 +142,14 @@ spec:
   createNamespace: true
   timeout: 10m
   valuesContent: |-
-    # Your chart values here
+    kube-prometheus-stack:
+      enabled: false
+    opensearch:
+      enabled: false
+    opensearch-dashboards:
+      enabled: false
+    opentelemetry-collector:
+      enabled: false
 }
 
 install_fp_components () {
