@@ -135,9 +135,8 @@ metadata:
   name: fairport
   namespace: kube-system
 spec:
-  chart: fairport
+  chart: oci://gcr.io/fairport-io/fairport
   version: 0.0.1
-  repo: oci://gcr.io/fairport-io
   targetNamespace: fairport
   createNamespace: true
   timeout: 10m
