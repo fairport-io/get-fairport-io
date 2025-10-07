@@ -99,6 +99,20 @@ wait_for_k8s_ready () {
     done
 }
 
+update_sysctl () {
+    info "Updating sysctl settings for k8s"
+    cat << EOF > /etc/sysctl.d/90-k8s.conf
+net.ipv4.ip_forward = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+fs.inotify.max_user_watches=2099999999
+fs.inotify.max_user_instances=2099999999
+fs.inotify.max_queued_events=2099999999
+vm.max_map_count=262144
+EOF
+    run_cmd sysctl --system &> /dev/null
+}
+
 generate_rke2_config () {
     info "Generating rke2 config file"
     local NODE_NAME=$(cat /etc/machine-id 2>/dev/null) || NODE_NAME=$(date | md5sum | cut -d ' ' -f1)
