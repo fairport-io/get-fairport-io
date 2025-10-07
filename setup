@@ -93,6 +93,7 @@ wait_for_k8s_ready () {
 generate_rke2_config () {
     info "Generating rke2 config file"
     local NODE_NAME=$(cat /etc/machine-id 2>/dev/null) || NODE_NAME=$(date | md5sum | cut -d ' ' -f1)
+    local NODE_NAME=$(echo "$NODE_NAME" | cut -c1-10)-$(date +%s)
     mkdir -p /etc/rancher/rke2
     cat << EOF > /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0600"
