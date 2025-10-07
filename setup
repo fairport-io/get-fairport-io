@@ -112,17 +112,41 @@ install_kubernetes () {
     run_cmd systemctl start rke2-server.service
 
     info "Install fpk"
+    run_cmd mkdir -p /usr/local/bin
     echo -e '#!/bin/bash\n\n/var/lib/rancher/rke2/bin/kubectl --kubeconfig=/etc/rancher/rke2/rke2.yaml $*' > /usr/local/bin/fpk
     [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fpk"
     run_cmd chmod +x /usr/local/bin/fpk
+
+    info "Ensure /usr/local/bin is in PATH"
+    if ! echo $PATH | grep -q "/usr/local/bin"; then
+        echo 'export PATH=$PATH:/usr/local/bin' >> /$HOME/.bashrc
+    fi
+    export PATH=$PATH:/usr/local/bin
 
     info "Waiting for k8s to be ready"
     wait_for_k8s_ready 120
 }
 
+install_fp_helm_chart () {
+    cat << EOF | fpk apply -f -
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: fairport
+  namespace: kube-system
+spec:
+  chart: fairport
+  version: 0.0.1
+  repo: oci://gcr.io/fairport-io
+  targetNamespace: fairport
+  createNamespace: true
+  timeout: 10m
+  valuesContent: |-
+    # Your chart values here
+}
+
 install_fp_components () {
-    # Idempotent install of fp components
-    info "TODO"
+    install_fp_helm_chart
 }
 
 install_images () {
@@ -144,7 +168,7 @@ install () {
 
     install_images
     install_kubernetes
-    #install_fp_components
+    install_fp_components
 }
 
 stop () {
