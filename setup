@@ -43,6 +43,7 @@ check_variables () {
         timeout 2 curl -ks "$RKE2_SERVER/ping" 2>/dev/null | grep -q "pong" || crit "Cannot reach RKE2 server at '$RKE2_SERVER', please check the address and ensure the server is running and reachable from this machine"
     else
         RKE2_TYPE="server"
+        RKE2_BOOTSTRAP="true"
     fi
 
     MODE="$FP_MODE"
@@ -189,7 +190,7 @@ EOF
 }
 
 install_fp_components () {
-    [ "$RKE2_TYPE" = "server" ] && install_fp_helm_chart
+    [ "$RKE2_BOOTSTRAP" = "true" ] && install_fp_helm_chart
 }
 
 install_images () {
