@@ -179,7 +179,7 @@ spec:
   timeout: 10m
   valuesContent: |-
     kube-prometheus-stack:
-      enabled: false
+      enabled: true
     opensearch:
       enabled: false
     opensearch-dashboards:
