@@ -165,6 +165,7 @@ install_kubernetes () {
 }
 
 install_fp_helm_chart () {
+    info "Installing Fairport components"
     cat << EOF | fpk apply -f -
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
