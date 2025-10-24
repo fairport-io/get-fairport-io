@@ -211,6 +211,7 @@ install () {
         return 0
     fi
 
+    update_sysctl
     install_images
     install_kubernetes
     install_fp_components
