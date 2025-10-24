@@ -62,7 +62,7 @@ check_variables () {
     RKE2_BINARY_FILE="/usr/local/bin/rke2"
     RKE2_KUBECONFIG="/etc/rancher/rke2/rke2.yaml"
     [ "$RKE2_TYPE" = "agent" ] && RKE2_KUBECONFIG="/var/lib/rancher/rke2/agent/rke2controller.kubeconfig"
-    [ "$FAIRPORT_CHART_VERSION"   ] || FAIRPORT_CHART_VERSION="0.1.3"
+    [ "$FAIRPORT_CHART_VERSION"   ] || FAIRPORT_CHART_VERSION="0.1.4"
     [ "$FAIRPORT_CHART_SOURCE"    ] || FAIRPORT_CHART_SOURCE="oci://gcr.io/fairport-io/fairport"
     [ "$FAIRPORT_CHART_NAMESPACE" ] || FAIRPORT_CHART_NAMESPACE="fairport"
 }
@@ -177,6 +177,7 @@ spec:
   version: $FAIRPORT_CHART_VERSION
   targetNamespace: $FAIRPORT_CHART_NAMESPACE
   createNamespace: true
+  failurePolicy: abort
   timeout: 10m
   valuesContent: |-
     kube-prometheus-stack:
