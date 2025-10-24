@@ -236,6 +236,7 @@ main () {
     echo "$@" | grep -q -- "stop" && stop
     echo "$@" | grep -q -- "uninstall" && uninstall
     check_variables
+    echo "$@" | grep -q -- "update-components" && install_fp_helm_chart
     install
 }
 
