@@ -40,7 +40,7 @@ check_variables () {
         export INSTALL_RKE2_TYPE="$RKE2_TYPE"
         [ "$RKE2_SERVER" ] || crit "Environment variable 'RKE2_SERVER' must be set when RKE2_TYPE is 'agent'. It should contain the IP of an existing server node, e.g. 'https://<SERVER_IP>:9345'"
         [ "$RKE2_TOKEN"  ] || crit "Environment variable 'RKE2_TOKEN' must be set when RKE2_TYPE is 'agent'.  It can be retrieved from an existing server node with 'cat /var/lib/rancher/rke2/server/node-token'"
-        timeout 2 curl -ks "$RKE2_SERVER/ping" 2>/dev/null | grep -q "pong" || crit "Cannot reach RKE2 server at '$RKE2_SERVER', please check the address and ensure the server is running and reachable from this machine"
+        timeout 2 curl -ks "$RKE2_SERVER/ping" 2>/dev/null | egrep -q "Status|pong" || crit "Cannot reach RKE2 server at '$RKE2_SERVER', please check the address and ensure the server is running and reachable from this machine"
     else
         RKE2_TYPE="server"
         RKE2_BOOTSTRAP="true"
