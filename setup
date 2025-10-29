@@ -154,6 +154,13 @@ install_kubernetes () {
     [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fpk"
     run_cmd chmod +x /usr/local/bin/fpk
 
+    info "Add script to simplify adding more nodes to the cluster"
+    echo -e '#!/bin/bash\n\necho "RKE2_TYPE=server RKE2_SERVER=https://$(ip route | grep default | head -n1 | grep -o '\''src.*'\'' | cut -d '\'' '\'' -f2):6443 RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) curl https://get.fairport.io | sudo -E bash -; history -d \$HISTCMD"' > /usr/local/bin/fp-add-server
+    [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fp-add-server"
+    echo -e '#!/bin/bash\n\necho "RKE2_TYPE=agent RKE2_SERVER=https://$(ip route | grep default | head -n1 | grep -o '\''src.*'\'' | cut -d '\'' '\'' -f2):6443 RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) curl https://get.fairport.io | sudo -E bash -; history -d \$HISTCMD"' > /usr/local/bin/fp-add-agent
+    [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fp-add-agent"
+    run_cmd chmod +x /usr/local/bin/fp-add-server /usr/local/bin/fp-add-agent
+
     info "Ensure /usr/local/bin is in PATH"
     if ! echo $PATH | grep -q "/usr/local/bin"; then
         echo 'export PATH=$PATH:/usr/local/bin' >> /$HOME/.bashrc
