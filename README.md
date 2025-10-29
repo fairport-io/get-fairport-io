@@ -8,16 +8,14 @@
 curl https://get.fairport.io | sudo bash -
 ```
 
-### Add Node To Existing Cluster
-
-#### Using the Helper Script
+### Add Node To Existing Cluster Using the Helper Script
 
 Log into a control-plane/server node and run one of the following commands to generate a script used to join the cluster:
 
 - Agent/Worker: `/usr/local/bin/fp-add-agent`
 - Server/Control-plane: `/usr/local/bin/fp-add-server`
 
-#### Manually
+### Add Node To Existing Cluster Manually
 
 You can also generate your own join script by using the following method:
 
