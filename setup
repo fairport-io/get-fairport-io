@@ -173,6 +173,10 @@ install_kubernetes () {
 
 install_fp_helm_chart () {
     info "Installing Fairport components"
+    if [ "$FAIRPORT_CONFIG_FILE" ]; then
+        FAIRPORT_CONFIG_CONTENT=$(cat $FAIRPORT_CONFIG_FILE | sed 's/^/    /')
+        info "Using Fairport config from $FAIRPORT_CONFIG_FILE"
+    fi
     cat << EOF | fpk apply -f -
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
@@ -187,14 +191,7 @@ spec:
   failurePolicy: abort
   timeout: 10m
   valuesContent: |-
-    kube-prometheus-stack:
-      enabled: true
-    opensearch:
-      enabled: false
-    opensearch-dashboards:
-      enabled: false
-    opentelemetry-collector:
-      enabled: false
+$FAIRPORT_CONFIG_CONTENT
 EOF
 }
 
