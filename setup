@@ -61,6 +61,10 @@ check_variables () {
     RKE2_BINARIES_BUNDLE_FILE="${RKE2_BINARIES_DIR}/rke2.${OS}-${ARCH}-${RKE2_VERSION}.tar.gz"
     RKE2_BINARY_FILE="/usr/local/bin/rke2"
     RKE2_KUBECONFIG="/etc/rancher/rke2/rke2.yaml"
+    [ "$(ip -4 route show default)" ] && RKE2_CLUSTER_CIDR="100.64.0.0/12"
+    [ "$(ip -4 route show default)" ] && RKE2_SERVICE_CIDR="100.80.0.0/12"
+    [ "$(ip -6 route show default)" ] && RKE2_CLUSTER_CIDR="$RKE2_CLUSTER_CIDR,fd00:10:42::/48"
+    [ "$(ip -6 route show default)" ] && RKE2_SERVICE_CIDR="$RKE2_SERVICE_CIDR,fd00:10:43::/108"
     [ "$RKE2_TYPE" = "agent" ] && RKE2_KUBECONFIG="/var/lib/rancher/rke2/agent/rke2controller.kubeconfig"
     [ "$FAIRPORT_CHART_VERSION"   ] || FAIRPORT_CHART_VERSION="0.2.1"
     [ "$FAIRPORT_CHART_SOURCE"    ] || FAIRPORT_CHART_SOURCE="oci://gcr.io/fairport-io/fairport"
@@ -122,8 +126,8 @@ generate_rke2_config () {
     cat << EOF > /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0600"
 node-name: "$NODE_NAME"
-cluster-cidr: "100.64.0.0/12,fd00:10:42::/48"
-service-cidr: "100.80.0.0/12,fd00:10:43::/108"
+cluster-cidr: "$RKE2_CLUSTER_CIDR"
+service-cidr: "$RKE2_SERVICE_CIDR"
 etcd-expose-metrics: true
 etcd-arg: "quota-backend-bytes=4294967296"
 cni: cilium
