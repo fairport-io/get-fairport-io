@@ -130,7 +130,7 @@ cluster-cidr: "$RKE2_CLUSTER_CIDR"
 service-cidr: "$RKE2_SERVICE_CIDR"
 etcd-expose-metrics: true
 etcd-arg: "quota-backend-bytes=4294967296"
-cni: cilium
+cni: none
 disable-kube-proxy: true
 EOF
     [ "$RKE2_SERVER" ] && echo "server: $RKE2_SERVER" >> /etc/rancher/rke2/config.yaml
