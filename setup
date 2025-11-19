@@ -124,7 +124,7 @@ generate_rke2_config () {
     local NODE_NAME=$(cat /etc/machine-id 2>/dev/null) || NODE_NAME=$(date | md5sum | cut -d ' ' -f1)
     local NODE_NAME=$(echo "$NODE_NAME" | cut -c1-10)-$(date +%s)
     mkdir -p /etc/rancher/rke2
-    cat << EOF > /etc/rancher/rke2/config.yaml=
+    cat << EOF > /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0600"
 node-name: "$NODE_NAME"
 node-ip: "${DEFAULT_IP}"
