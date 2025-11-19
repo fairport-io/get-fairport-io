@@ -190,6 +190,10 @@ spec:
     k8sServicePort: "6443"
     operator:
       replicas: 1
+    encryption:
+      enabled: true
+      type: wireguard
+      nodeEncryption: true
 EOF
 
     info "Waiting for k8s to be ready"
