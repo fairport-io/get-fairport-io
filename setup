@@ -51,7 +51,8 @@ check_variables () {
     ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
     echo "$ARCH" | egrep -q "amd64|x86_64" && ARCH="amd64"
     echo "$ARCH" | egrep -q "arm64|aarch64" && ARCH="arm64"
-    DEFAULT_IP=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
+    DEFAULT_IPV4=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
+    DEFAULT_IPV6=$(ip route get 2001:4860:4860::8888 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
     RKE2_VERSION="v1.33.3+rke2r1"
     RKE2_VERSION_URLSAFE=$(echo "$RKE2_VERSION" | sed 's/+/%2B/g')
     RKE2_IMAGE_URL="https://github.com/rancher/rke2/releases/download/${RKE2_VERSION_URLSAFE}/rke2-images.${OS}-${ARCH}.tar.zst"
@@ -121,12 +122,12 @@ EOF
 
 generate_rke2_config () {
     info "Generating rke2 config file"
-    local NODE_NAME="$(echo $DEFAULT_IP | tr '.' '-')-$(date +%s)"
+    local NODE_NAME="$(echo $DEFAULT_IPV4 | tr '.' '-')-$(date +%s)"
     mkdir -p /etc/rancher/rke2
     cat << EOF > /etc/rancher/rke2/config.yaml
 write-kubeconfig-mode: "0600"
 node-name: "$NODE_NAME"
-node-ip: "${DEFAULT_IP}"
+node-ip: "${DEFAULT_IPV4},${DEFAULT_IPV6}"
 cluster-cidr: "$RKE2_CLUSTER_CIDR"
 service-cidr: "$RKE2_SERVICE_CIDR"
 etcd-expose-metrics: true
@@ -185,7 +186,7 @@ metadata:
 spec:
   valuesContent: |-
     kubeProxyReplacement: true
-    k8sServiceHost: "${DEFAULT_IP}"
+    k8sServiceHost: "${DEFAULT_IPV4}"
     k8sServicePort: "6443"
     operator:
       replicas: 1
