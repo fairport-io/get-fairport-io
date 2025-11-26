@@ -42,7 +42,7 @@ metadata:
   name: worker-1
   namespace: fairport
   labels:
-    fairport.io: "node"
+    fairport.io/node: "true"
 data:
   ip: 127.0.0.1
   type: agent
