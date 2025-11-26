@@ -45,7 +45,7 @@ metadata:
     fairport.io/node: "true"
 data:
   ip: 127.0.0.1
-  type: agent
+  role: agent
   ssh_user: admin
   ssh_port: "22"
   ssh_secret: ssh-key
