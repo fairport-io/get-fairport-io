@@ -53,8 +53,6 @@ data:
   ssh_secret_value: id_rsa         # Default: id_rsa
   pre_install_cmd: |
     echo hi                        # Default: ''
-  install_cmd: |
-    curl https://get.fairport.io | sudo bash -
   post_install_cmd: |
     echo bye                       # Default: ''
 EOF
