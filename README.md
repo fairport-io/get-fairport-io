@@ -47,7 +47,7 @@ data:
   ip: 127.0.0.1
   role: agent
   ssh_user: admin
-  ssh_port: "22"
+  ssh_port: 22
   ssh_secret: ssh-key
   ssh_secret_value: id_rsa
   pre_install_cmd: |
