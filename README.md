@@ -48,7 +48,8 @@ data:
   role: agent
   ssh_user: admin
   ssh_port: 22
-  ssh_secret: ssh-key
+  ssh_secret: fp-ssh-keys
+  ssh_secret_namespace: tinkerbell
   ssh_secret_value: id_rsa
   pre_install_cmd: |
     echo hi
