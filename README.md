@@ -39,22 +39,22 @@ cat << EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: worker-1
-  namespace: fairport
+  name: worker-1                   # Required (Unique name)
+  namespace: fairport              # Required: fairport
   labels:
-    fairport.io/node: "true"
+    fairport.io/node: "true"       # Required ("true")
 data:
-  ip: 127.0.0.1
-  type: agent
-  ssh_user: admin
-  ssh_port: 22
-  ssh_secret_name: fp-ssh-keys
-  ssh_secret_namespace: tinkerbell
-  ssh_secret_value: id_rsa
+  ip: 127.0.0.1                    # Required
+  type: agent                      # Default: agent
+  ssh_user: fairport               # Default: fairport
+  ssh_port: 22                     # Default: 22
+  ssh_secret_name: fp-ssh-keys     # Default: fp-ssh-keys
+  ssh_secret_namespace: tinkerbell # Default: tinkerbell
+  ssh_secret_value: id_rsa         # Default: id_rsa
   pre_install_cmd: |
-    echo hi
+    echo hi                        # Default: ''
   post_install_cmd: |
-    echo bye
+    echo bye                       # Default: ''
 EOF
 ```
 
