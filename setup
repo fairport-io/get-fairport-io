@@ -51,8 +51,6 @@ check_variables () {
     ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
     echo "$ARCH" | egrep -q "amd64|x86_64" && ARCH="amd64"
     echo "$ARCH" | egrep -q "arm64|aarch64" && ARCH="arm64"
-    DEFAULT_IPV4=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
-    DEFAULT_IPV6=$(ip route get 2001:4860:4860::8888 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
     RKE2_VERSION="v1.33.3+rke2r1"
     RKE2_VERSION_URLSAFE=$(echo "$RKE2_VERSION" | sed 's/+/%2B/g')
     RKE2_IMAGE_URL="https://github.com/rancher/rke2/releases/download/${RKE2_VERSION_URLSAFE}/rke2-images.${OS}-${ARCH}.tar.zst"
@@ -77,6 +75,9 @@ check_variables () {
         [ "$(ip -4 route show default)" ] && RKE2_SERVICE_CIDR="100.80.0.0/12"
         [ "$(ip -6 route show default)" ] && RKE2_SERVICE_CIDR="$RKE2_SERVICE_CIDR,fd00:10:43::/108"
     fi
+
+    DEFAULT_IPV4=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
+    echo "$RKE2_CLUSTER_CIDR" | grep -q ":" && DEFAULT_IPV6=$(ip route get 2001:4860:4860::8888 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
 }
 
 k8s_same_version () {
