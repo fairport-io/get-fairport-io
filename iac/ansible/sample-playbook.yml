@@ -31,6 +31,10 @@
 
   - name: RUN INSTALLER COMMAND
     ansible.builtin.shell: |
+      {% for k, v in hostvars[inventory_hostname].items() if k.startswith('ENV_') %}
+      export {{ k[4:] }}="{{ v }}"
+      {% endfor %}
+
       {% if inventory_hostname == BOOTSTRAP_NODE %}
       curl -s https://get.fairport.io | bash -
       until fpk -n fairport get cm fairport-installer-values > /dev/null 2>&1; do
@@ -39,7 +43,7 @@
           sleep 1
       done
       cat << 'EOYAML' | fpk apply -f -
-      {{ FAIRPORT_INSTALLER_VALUES_CONFIGMAP_OVERRIDE }}
+      {{ KUBERNETES_OBJECTS }}
       EOYAML
       {% elif KUBE_ROLE == 'server' %}
       {{ INSTALL_SERVER_CMD }}
@@ -48,7 +52,7 @@
       {% else %}
       echo "Unknown KUBE_ROLE" && exit 1
       {% endif %}
-    throttle: 5
+    throttle: 1
     async: 600
     poll: 5
     no_log: true
