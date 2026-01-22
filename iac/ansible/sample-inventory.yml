@@ -1,0 +1,21 @@
+---
+all:
+  children:
+    cluster-0:
+      hosts:
+        k8s-0.example.com:
+          KUBE_ROLE: server
+        k8s-1.example.com:
+          KUBE_ROLE: agent
+      vars:
+        BOOTSTRAP_NODE: k8s-0.example.com
+        FAIRPORT_INSTALLER_VALUES_CONFIGMAP_OVERRIDE: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: fairport-installer-values
+            namespace: fairport
+          data:
+            values.yaml: |
+              # example:
+              #   enabled: true

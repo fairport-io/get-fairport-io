@@ -1,0 +1,59 @@
+---
+- name: Manage Nodes
+  hosts: all
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+  tasks:
+
+  - name: GET INSTALLER COMMANDS
+    when: inventory_hostname != BOOTSTRAP_NODE
+    ansible.builtin.shell: |
+      [ ! -f /usr/local/bin/fp-add-server ] && echo "Installer not found /usr/local/bin/fp-add-server" && exit 1
+      [ ! -f /usr/local/bin/fp-add-agent ] && echo "Installer not found /usr/local/bin/fp-add-agent" && exit 1
+      /usr/local/bin/fp-add-server
+      /usr/local/bin/fp-add-agent
+    register: INSTALL_CMD_RAW
+    delegate_to: "{{ BOOTSTRAP_NODE }}"
+    run_once: true
+
+  - name: EXTRACT INSTALLER COMMANDS
+    when: inventory_hostname != BOOTSTRAP_NODE
+    ansible.builtin.set_fact:
+      INSTALL_SERVER_CMD: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[0] }}"
+      INSTALL_AGENT_CMD: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[1] }}"
+
+  - name: VALIDATE INSTALLER COMMAND
+    when: inventory_hostname != BOOTSTRAP_NODE
+    ansible.builtin.fail:
+      msg: "Installer command is invalid"
+    when: not INSTALL_SERVER_CMD.startswith('export') or not INSTALL_AGENT_CMD.startswith('export')
+
+  - name: RUN INSTALLER COMMAND
+    ansible.builtin.shell: |
+      {% if inventory_hostname == BOOTSTRAP_NODE %}
+      curl https://get.fairport.io | sudo bash -
+      until fpk -n fairport get cm fairport-installer-values > /dev/null 2>&1; do
+          I=$(($I + 1))
+          [ $I -gt 300 ] && echo "Failed to initialize in time" && exit 1
+          sleep 1
+      done
+      cat << 'EOYAML' | fpk apply -f -
+      {{ FAIRPORT_INSTALLER_VALUES_CONFIGMAP_OVERRIDE }}
+      EOYAML
+      {% elif KUBE_ROLE == 'server' %}
+      {{ INSTALL_SERVER_CMD }}
+      {% elif KUBE_ROLE == 'agent' %}
+      {{ INSTALL_AGENT_CMD }}
+      {% else %}
+      echo "Unknown KUBE_ROLE" && exit 1
+      {% endif %}
+    throttle: 5
+    async: 600
+    poll: 5
+    no_log: true
+    register: RESULT
+
+  - name: SHOW INSTALLER COMMAND OUTPUT
+    ansible.builtin.debug:
+      msg: "{{ RESULT.stdout | regex_replace('TOKEN=\\S*', 'TOKEN=********') }}"
