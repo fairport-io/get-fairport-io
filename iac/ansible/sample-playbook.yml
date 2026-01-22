@@ -7,7 +7,6 @@
   tasks:
 
   - name: GET INSTALLER COMMANDS
-    when: inventory_hostname != BOOTSTRAP_NODE
     ansible.builtin.shell: |
       [ ! -f /usr/local/bin/fp-add-server ] && echo "Installer not found /usr/local/bin/fp-add-server" && exit 1
       [ ! -f /usr/local/bin/fp-add-agent ] && echo "Installer not found /usr/local/bin/fp-add-agent" && exit 1
@@ -16,6 +15,7 @@
     register: INSTALL_CMD_RAW
     delegate_to: "{{ BOOTSTRAP_NODE }}"
     run_once: true
+    delegate_facts: true
 
   - name: EXTRACT INSTALLER COMMANDS
     when: inventory_hostname != BOOTSTRAP_NODE
@@ -24,11 +24,11 @@
       INSTALL_AGENT_CMD: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[1] }}"
 
   - name: VALIDATE INSTALLER COMMAND
-    when: inventory_hostname != BOOTSTRAP_NODE
     ansible.builtin.fail:
       msg: "Installer command is invalid"
     when:
-    - "('RKE2_TYPE={{ KUBE_ROLE }}' not in INSTALL_SERVER_CMD) or ('RKE2_TYPE={{ KUBE_ROLE }}' not in INSTALL_AGENT_CMD)"
+    - inventory_hostname != BOOTSTRAP_NODE
+    - "('RKE2_TYPE=server' not in INSTALL_SERVER_CMD) or ('RKE2_TYPE=agent' not in INSTALL_AGENT_CMD)"
 
   - name: RUN INSTALLER COMMAND
     ansible.builtin.shell: |
@@ -53,7 +53,9 @@
       {% else %}
       echo "Unknown KUBE_ROLE" && exit 1
       {% endif %}
-    throttle: 1
+
+      exit 0
+    throttle: 5
     async: 600
     poll: 5
     no_log: true
