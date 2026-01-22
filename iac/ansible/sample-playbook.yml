@@ -32,7 +32,7 @@
   - name: RUN INSTALLER COMMAND
     ansible.builtin.shell: |
       {% if inventory_hostname == BOOTSTRAP_NODE %}
-      curl https://get.fairport.io | sudo bash -
+      curl -s https://get.fairport.io | bash -
       until fpk -n fairport get cm fairport-installer-values > /dev/null 2>&1; do
           I=$(($I + 1))
           [ $I -gt 300 ] && echo "Failed to initialize in time" && exit 1
