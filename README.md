@@ -8,6 +8,9 @@
   - [Using FP Node Manager](#using-fp-node-manager)
   - [Manually](#manually)
 - [Uninstall](#uninstall)
+- [Infrastructure As Code](#infrastructure-as-code)
+  - [Ansible](#Ansible)
+  - [Terraform](#Terraform)
 
 ---
 
