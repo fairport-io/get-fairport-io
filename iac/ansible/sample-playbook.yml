@@ -27,7 +27,8 @@
     when: inventory_hostname != BOOTSTRAP_NODE
     ansible.builtin.fail:
       msg: "Installer command is invalid"
-    when: not INSTALL_SERVER_CMD.startswith('export') or not INSTALL_AGENT_CMD.startswith('export')
+    when:
+    - "('RKE2_TYPE={{ KUBE_ROLE }}' not in INSTALL_SERVER_CMD) or ('RKE2_TYPE={{ KUBE_ROLE }}' not in INSTALL_AGENT_CMD)"
 
   - name: RUN INSTALLER COMMAND
     ansible.builtin.shell: |
