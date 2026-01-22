@@ -80,7 +80,7 @@ curl https://get.fairport.io | sudo bash -s -- uninstall
 
 ## Infrastrcture As Code
 
-People may want to manage their clusters using Infrastructure as Code (IaC) tools such as Ansible and Terraform.  You can find samples of both in this repository.
+People and/or organizations may want to manage their clusters using Infrastructure as Code (IaC) tools such as Ansible and Terraform.  You can find samples of both in this repository.
 
 ### Ansible
 
