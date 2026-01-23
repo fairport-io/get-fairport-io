@@ -8,6 +8,10 @@ all:
           # Variables with the prefix ENV_ will be exported as environment variables on the target nodes
           # For example, setting ENV_RKE2_VERSION=v1.33.3+rke2r1 will override the defaults and
           # install that specific version on the node
+          #  ENV_RKE2_VERSION=v0.0.1
+          # Label and/or taint the node with the KUBE_LABELS and KUBE_TAINTS variables (space separated)
+          # KUBE_LABELS: "example.com/type=webserver"
+          # KUBE_TAINTS: "example.com/type=webserver:NoSchedule"
         k8s-1.example.com:
           KUBE_ROLE: agent
       vars:

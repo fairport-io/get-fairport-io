@@ -12,16 +12,17 @@
       [ ! -f /usr/local/bin/fp-add-agent ] && echo "Installer not found /usr/local/bin/fp-add-agent" && exit 1
       /usr/local/bin/fp-add-server
       /usr/local/bin/fp-add-agent
+      fpk get nodes -o json
     register: INSTALL_CMD_RAW
     delegate_to: "{{ BOOTSTRAP_NODE }}"
     run_once: true
     delegate_facts: true
 
   - name: EXTRACT INSTALLER COMMANDS
-    when: inventory_hostname != BOOTSTRAP_NODE
     ansible.builtin.set_fact:
       INSTALL_SERVER_CMD: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[0] }}"
       INSTALL_AGENT_CMD: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[1] }}"
+      CLUSTER_NODES: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[2:] | join('') | from_json }}"
 
   - name: VALIDATE INSTALLER COMMAND
     ansible.builtin.fail:
@@ -54,6 +55,8 @@
       echo "Unknown KUBE_ROLE" && exit 1
       {% endif %}
 
+      echo "NODE_NAME=$(cat /etc/rancher/rke2/config.yaml | sed -n 's/^node-name: //p')"
+
       exit 0
     throttle: 5
     async: 600
@@ -64,3 +67,81 @@
   - name: SHOW INSTALLER COMMAND OUTPUT
     ansible.builtin.debug:
       msg: "{{ RESULT.stdout | regex_replace('TOKEN=\\S*', 'TOKEN=********') }}"
+
+  - name: EXTRACT NODE NAME
+    ansible.builtin.set_fact:
+      NODE_NAME: "{{ RESULT.stdout | regex_search('NODE_NAME=(\\S+)', '\\1') | first | regex_replace('\"', '') }}"
+
+  - name: SET NODE LABELS AND TAINTS
+    vars:
+      # Find the specific node object from the list where metadata.name matches NODE_NAME
+      current_node: "{{ CLUSTER_NODES['items'] | selectattr('metadata.name', 'equalto', NODE_NAME) | first | default({}) }}"
+    ansible.builtin.set_fact:
+      NODE_LABELS: "{{ current_node.metadata.labels | default({}) }}"
+      NODE_TAINTS: "{{ current_node.metadata.taints | default([]) }}"
+
+  - name: CHECK FOR MISSING OR MISMATCHED LABELS AND TAINTS
+    ansible.builtin.set_fact:
+      MISSING_LABELS: >-
+        {%- set missing = [] -%}
+        {%- if KUBE_LABELS is defined and KUBE_LABELS -%}
+          {%- for pair in KUBE_LABELS.split(' ') -%}
+             {%- set kv = pair.split('=') -%}
+             {%- if kv | length == 2 -%}
+               {%- set desired_key = kv[0] -%}
+               {%- set desired_val = kv[1] -%}
+               {%- if NODE_LABELS[desired_key] is not defined or NODE_LABELS[desired_key] != desired_val -%}
+                  {%- set _ = missing.append(pair) -%}
+               {%- endif -%}
+             {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+        {{ missing }}
+      MISSING_TAINTS: >-
+        {%- set missing = [] -%}
+        {%- if KUBE_TAINTS is defined and KUBE_TAINTS -%}
+          {%- for taint_str in KUBE_TAINTS.split(' ') -%}
+             {# Parse input string: key=value:Effect or key:Effect #}
+             {%- set parts = taint_str.split(':') -%}
+             {%- if parts | length == 2 -%}
+               {%- set desired_effect = parts[1] -%}
+               {%- set kv = parts[0].split('=') -%}
+               {%- set desired_key = kv[0] -%}
+               {# Handle case with or without value #}
+               {%- set desired_val = kv[1] if kv | length > 1 else '' -%}
+               
+               {# Check against existing list of objects #}
+               {%- set ns = namespace(found=false) -%}
+               {%- for existing in NODE_TAINTS -%}
+                  {%- set existing_val = existing.value | default('') -%}
+                  {%- if existing.key == desired_key and existing.effect == desired_effect and existing_val == desired_val -%}
+                      {%- set ns.found = true -%}
+                  {%- endif -%}
+               {%- endfor -%}
+
+               {%- if not ns.found -%}
+                  {%- set _ = missing.append(taint_str) -%}
+               {%- endif -%}
+             {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+        {{ missing }}
+
+  - name: LABEL AND TAINT NODES
+    when: MISSING_LABELS | length > 0 or MISSING_TAINTS | length > 0
+    ansible.builtin.shell: |
+      {% if MISSING_LABELS | length > 0 %}
+      echo "fpk label node $NODE_NAME {{ MISSING_LABELS | join(' ') }}"
+      {% endif %}
+      {% if MISSING_TAINTS | length > 0 %}
+      echo "fpk taint node $NODE_NAME {{ MISSING_TAINTS | join(' ') }}"
+      {% endif %}
+      echo "Done"
+    register: LABEL_AND_TAINT_CMD_RAW
+    delegate_to: "{{ BOOTSTRAP_NODE }}"
+    delegate_facts: true
+    throttle: 5
+
+  - name: LABEL AND TAINT NODES OUTPUT
+    ansible.builtin.debug:
+      msg: "{{ LABEL_AND_TAINT_CMD_RAW.stdout_lines | default(['No changes required']) }}"
