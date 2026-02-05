@@ -53,7 +53,7 @@ data:
   ssh_port: 22                     # Default: 22
   ssh_secret_name: fp-ssh-keys     # Default: fp-ssh-keys
   ssh_secret_namespace: tinkerbell # Default: tinkerbell
-  ssh_secret_value: id_rsa         # Default: id_rsa
+  ssh_secret_key: id_rsa           # Default: id_rsa
   pre_install_cmd: |
     echo hi                        # Default: ''
   post_install_cmd: |
