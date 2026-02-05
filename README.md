@@ -45,7 +45,7 @@ metadata:
   name: worker-1                     # Required (Unique name)
   namespace: fairport                # Required: fairport
   labels:
-    fairport.io/node: "true"         # Required ("true")
+    fairport.io/node: 'true'         # Required ('true')
 data:
   ip: '127.0.0.1'                    # Required
   type: 'agent'                      # Default: agent
