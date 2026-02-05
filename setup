@@ -171,9 +171,9 @@ install_kubernetes () {
     run_cmd chmod +x /usr/local/bin/fpk
 
     info "Add script to simplify adding more nodes to the cluster"
-    echo -e '#!/bin/bash\n\n[ $(whoami) != root ] && echo "Failure, must be root" && exit 1\necho "[ \$(whoami) != root ] && echo \"Failure, must be root\" && exit 1 ; export RKE2_TYPE=server ; export RKE2_SERVER=https://$(ip route get 1 | sed -n '\''/src/{s/.*src *\([^ ]*\).*/\1/p;q}'\''):9345 ; export RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) ; curl -s https://get.fairport.io | sudo -E bash - || exit 1 ; history -d \$HISTCMD" ; exit 0' > /usr/local/bin/fp-add-server
+    echo -e '#!/bin/bash\n\n[ $(whoami) != root ] && echo "Failure, must be root" && exit 1\necho "[ \$(whoami) != root ] && echo \"Failure, must be root\" && exit 1 ; export RKE2_TYPE=server ; export RKE2_SERVER=https://$(ip route get 1 | sed -n '\''/src/{s/.*src *\([^ ]*\).*/\\1/p;q}'\''):9345 ; export RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) ; curl -s https://get.fairport.io | sudo -E bash - || exit 1 ; history -d \$HISTCMD" ; exit 0' > /usr/local/bin/fp-add-server
     [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fp-add-server"
-    echo -e '#!/bin/bash\n\n[ $(whoami) != root ] && echo "Failure, must be root" && exit 1\necho "[ \$(whoami) != root ] && echo \"Failure, must be root\" && exit 1 ; export RKE2_TYPE=agent ; export RKE2_SERVER=https://$(ip route get 1 | sed -n '\''/src/{s/.*src *\([^ ]*\).*/\1/p;q}'\''):9345 ; export RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) ; curl -s https://get.fairport.io | sudo -E bash - || exit 1 ; history -d \$HISTCMD" ; exit 0' > /usr/local/bin/fp-add-agent
+    echo -e '#!/bin/bash\n\n[ $(whoami) != root ] && echo "Failure, must be root" && exit 1\necho "[ \$(whoami) != root ] && echo \"Failure, must be root\" && exit 1 ; export RKE2_TYPE=agent ; export RKE2_SERVER=https://$(ip route get 1 | sed -n '\''/src/{s/.*src *\([^ ]*\).*/\\1/p;q}'\''):9345 ; export RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) ; curl -s https://get.fairport.io | sudo -E bash - || exit 1 ; history -d \$HISTCMD" ; exit 0' > /usr/local/bin/fp-add-agent
     [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fp-add-agent"
     run_cmd chmod +x /usr/local/bin/fp-add-server /usr/local/bin/fp-add-agent
 
