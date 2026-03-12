@@ -234,6 +234,7 @@ EOF
 
 install_fp_components () {
     [ "$RKE2_BOOTSTRAP" = "true" ] && install_fp_helm_chart
+    return 0
 }
 
 install_images () {
