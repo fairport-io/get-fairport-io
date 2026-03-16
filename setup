@@ -145,6 +145,10 @@ disable-kube-proxy: true
 EOF
     [ "$RKE2_SERVER" ] && echo "server: $RKE2_SERVER" >> /etc/rancher/rke2/config.yaml
     [ "$RKE2_TOKEN"  ] && echo "token: $RKE2_TOKEN" >> /etc/rancher/rke2/config.yaml
+    if systemctl is-active --quiet systemd-resolved && [ -f "/run/systemd/resolve/resolv.conf" ]; then
+        echo "kubelet-arg:" >> /etc/rancher/rke2/config.yaml
+        echo "- resolv-conf=/run/systemd/resolve/resolv.conf" >> /etc/rancher/rke2/config.yaml
+    fi
 }
 
 install_kubernetes () {
