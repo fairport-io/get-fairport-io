@@ -20,6 +20,9 @@
 curl https://get.fairport.io | sudo bash -
 ```
 
+> [!NOTE]
+> By default, the cluster will use `100.64.0.0/10` (CGNAT Range) for pods and services in a configuration which allows for up to 4096 nodes per cluster.  If this overlaps with any of your internal networks or apps like Tailscale, you can set a different range like this example: `export RKE2_CLUSTER_CIDR="10.144.0.0/12" && export RKE2_SERVICE_CIDR="10.160.0.0/12" | curl https://get.fairport.io | sudo bash -E -`
+
 ## Add Node To Existing Cluster
 
 ### Using the Helper Script
