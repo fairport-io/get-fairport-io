@@ -12,8 +12,6 @@
   - [Ansible](#Ansible)
   - [Terraform](#Terraform)
 
----
-
 ## Create A New Cluster
 
 ```shell
@@ -22,6 +20,7 @@ curl https://get.fairport.io | sudo bash -
 
 > [!NOTE]
 > By default, the cluster will use `100.64.0.0/10` (CGNAT Range) for pods and services in a configuration which allows for up to 4096 nodes per cluster.  If this overlaps with any of your internal networks or apps like Tailscale, you can set a different range like this example:
+>
 > `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
 
 ## Add Node To Existing Cluster
