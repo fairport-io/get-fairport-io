@@ -92,7 +92,7 @@ k8s_is_healthy () {
     if [ "$RKE2_TYPE" = "agent" ]; then
         local CMD="fpk get node $NODE_NAME 2>&1 | egrep -v 'NAME| Ready ' | wc -l"
     else
-        local CMD='fpk -n kube-system get pods 2>&1 | egrep -v "NAME|Running|Completed" | wc -l'
+        local CMD='fpk -n kube-system get pods 2>&1 | egrep -v "NAME|Running|Completed|Terminating" | wc -l'
     fi
     local STATUS=$(timeout 10 bash -c "$CMD" 2>&1)
     if [ "$STATUS" -eq 0 ]; then
