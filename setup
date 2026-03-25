@@ -208,6 +208,25 @@ spec:
       nodeEncryption: true
 EOF
 
+    info "Update coredns config"
+    cat << EOF > /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: rke2-coredns
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    autoscaler:
+      coresPerReplica: 0
+      nodesPerReplica: 1
+      min: 1
+      max: 3
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true"
+EOF
+
     info "Waiting for k8s to be ready"
     wait_for_k8s_ready 180
 }
