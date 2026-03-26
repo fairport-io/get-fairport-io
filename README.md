@@ -24,7 +24,7 @@ curl https://get.fairport.io | sudo bash -
 > `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
 
 > [!NOTE]
-> You can override default values from the Fairport helm chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  You can follow this general example:
+> To override default values from the Fairport helm chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
 >
 > `export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml && echo "kube-vip:\n  enabled: false" > $FAIRPORT_CONFIG_FILE`
 
