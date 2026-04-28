@@ -6,23 +6,28 @@
   any_errors_fatal: true
   tasks:
 
-  - name: GET INSTALLER COMMANDS
+  - name: BOOTSTRAP CLUSTER AND/OR GET INSTALLER COMMANDS
     ansible.builtin.shell: |
+      command -v fpk > /dev/null 2>&1 || curl -s https://get.fairport.io | bash -
       [ ! -f /usr/local/bin/fp-add-server ] && echo "Installer not found /usr/local/bin/fp-add-server" && exit 1
       [ ! -f /usr/local/bin/fp-add-agent ] && echo "Installer not found /usr/local/bin/fp-add-agent" && exit 1
       /usr/local/bin/fp-add-server
       /usr/local/bin/fp-add-agent
-      fpk get nodes -o json
+      fpk get nodes -o json | tr -d '\n'
+    no_log: true
     register: INSTALL_CMD_RAW
     delegate_to: "{{ BOOTSTRAP_NODE }}"
     run_once: true
     delegate_facts: true
 
   - name: EXTRACT INSTALLER COMMANDS
+    vars:
+      RAW_STDOUT: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout }}"
     ansible.builtin.set_fact:
-      INSTALL_SERVER_CMD: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[0] }}"
-      INSTALL_AGENT_CMD: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[1] }}"
-      CLUSTER_NODES: "{{ hostvars[BOOTSTRAP_NODE]['INSTALL_CMD_RAW'].stdout_lines[2:] | join('') | from_json }}"
+      INSTALL_SERVER_CMD: "{{ RAW_STDOUT | regex_search('(?m)^.*RKE2_TYPE=server.*$') | default('') }}"
+      INSTALL_AGENT_CMD: "{{ RAW_STDOUT | regex_search('(?m)^.*RKE2_TYPE=agent.*$') | default('') }}"
+      CLUSTER_NODES: >-
+        {{ RAW_STDOUT | regex_search('(?s)\{.*\}') | from_json }}
 
   - name: VALIDATE INSTALLER COMMAND
     ansible.builtin.fail:
@@ -109,7 +114,7 @@
                {%- set desired_key = kv[0] -%}
                {# Handle case with or without value #}
                {%- set desired_val = kv[1] if kv | length > 1 else '' -%}
-               
+
                {# Check against existing list of objects #}
                {%- set ns = namespace(found=false) -%}
                {%- for existing in NODE_TAINTS -%}
