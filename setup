@@ -138,14 +138,16 @@ check_application_install_status () {
     info "Wait for fairport installer to start..."
     MAX_RETRIES=300
     for I in $(seq 1 $MAX_RETRIES); do
+        fpk -n kube-system get pod 2>&1 | grep -q "fairport.*Completed" && CHART_OK=true
         fpk get ns 2>&1 | grep -q "fairport" && NS_OK=true
         fpk -n fairport get pods 2>&1 | grep -q "fairport-installer-0.* Running .*" && POD_OK=true
-        [ "$NS_OK" ] && [ "$POD_OK" ] && info "Fairport installer has started" && sleep 5 && break
-        [ $I -ge 20 ] && info "Waiting for fairport installer to start..."
+        [ "$CHART_OK" ] && [ "$NS_OK" ] && [ "$POD_OK" ] && info "Fairport installer has started" && sleep 5 && break
         if [ $I -ge $MAX_RETRIES ]; then
+            [ "$CHART_OK" ] || crit "Fairport chart, check 'fpk -n kube-system get pods' for details"
             [ "$NS_OK" ] || crit "Fairport installer namespace 'fairport' not found, check 'fpk get ns' for details"
             [ "$POD_OK" ] || crit "Fairport installer pod 'fairport-installer-0' not running, check 'fpk -n fairport get pods' for details"
         fi
+        sleep 1
     done
 
     info "Installing applications, this may take a few minutes..."
