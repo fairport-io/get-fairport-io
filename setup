@@ -2,7 +2,7 @@
 
 info () { echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [INFO    ] (${FUNCNAME[1]}) $@" | tr '\n' ' '; echo ""; }
 warn () { echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [WARNING ] (${FUNCNAME[1]}) $@" | tr '\n' ' '; echo ""; }
-crit () { echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [CRITICAL] (${FUNCNAME[1]}) $@" | tr '\n' ' '; echo ""; exit 1; }
+crit () { echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] [CRITICAL] (${FUNCNAME[1]}) $@ | Docs: $DOCS_PAGE" | tr '\n' ' '; echo ""; exit 1; }
 
 run_cmd () {
     local CMD="$*"
@@ -26,6 +26,30 @@ check_dependencies () {
     command -v curl &> /dev/null || crit "Requirement 'curl' is not installed on this machine, please install and re-run."
 }
 
+check_system_requirements () {
+    info "Checking system requirements"
+
+    OS_NAME="$(uname | tr '[:upper:]' '[:lower:]')"
+    [ "$OS_NAME" = "linux" ] || crit "Unsupported OS '$OS_NAME'. Linux is required."
+
+    ARCH_NAME="$(uname -m | tr '[:upper:]' '[:lower:]')"
+    echo "$ARCH_NAME" | egrep -q "amd64|x86_64|arm64|aarch64" || crit "Unsupported architecture '$ARCH_NAME'. Required: amd64 or arm64."
+
+    command -v systemctl &> /dev/null || crit "Requirement 'systemctl' is not installed on this machine"
+    command -v ip &> /dev/null || crit "Requirement 'ip' is not installed on this machine"
+    command -v timeout &> /dev/null || crit "Requirement 'timeout' is not installed on this machine"
+
+    [ -d /run/systemd/system ] || crit "systemd is required"
+
+    MEM_KB=$(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null)
+    [ "$MEM_KB" ] || crit "Unable to read total memory from /proc/meminfo"
+    [ "$MEM_KB" -lt 4194304 ] && crit "Minimum recommended memory is >= 4GiB"
+
+    ROOT_AVAIL_KB=$(df -Pk / | awk 'NR==2{print $4}')
+    [ "$ROOT_AVAIL_KB" ] || crit "Unable to read free disk space"
+    [ "$ROOT_AVAIL_KB" -lt 10485760 ] && crit "Minimum free disk is >= 10GiB on /"
+}
+
 check_variables () {
     #if ! [ "$FP_CLUSTER_TOKEN" ]; then
     #    warn "Environment variable 'FP_CLUSTER_TOKEN' is not set."
@@ -46,6 +70,7 @@ check_variables () {
         RKE2_BOOTSTRAP="true"
     fi
 
+    DOCS_PAGE="https://github.com/fairport-io/get-fairport-io"
     MODE="$FP_MODE"
     OS="$(uname | tr '[:upper:]' '[:lower:]')"
     ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
@@ -304,6 +329,7 @@ uninstall () {
 main () {
     check_debug
     check_dependencies
+    check_system_requirements
     echo "$@" | grep -q -- "stop" && stop
     echo "$@" | grep -q -- "uninstall" && uninstall
     check_variables
