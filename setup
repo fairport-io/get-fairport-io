@@ -129,6 +129,27 @@ k8s_is_healthy () {
     fi
 }
 
+check_application_install_status () {
+
+    get_installer_state () {
+        fpk -n fairport logs fairport-installer-0 | tac | sed '/Detected changes/q' | tac | sed 1d | grep -E "NAME:|STATUS|helmfile apply succeeded" | paste - -
+    }
+
+    info "Installing applications, this may take a few minutes..."
+    MAX_RETRIES=300
+    for I in $(seq 1 $MAX_RETRIES); do
+        CURRENT_INSTALLER_STATE=$(get_installer_state)
+        echo "$INSTALLER_STATE" | grep -q "helmfile apply succeeded" && info "Installation complete, you can now use 'fpk' to interact with your cluster" && return 0
+        echo "$INSTALLER_STATE" | grep -q "NAME: fairport, STATUS: failed" && crit "Fairport installation failed, check 'fpk -n fairport logs fairport-installer-0' for details"
+        [ $I -ge $MAX_RETRIES ] && crit "Fairport installation is taking too long, check 'fpk -n fairport logs fairport-installer-0' for details"
+        if [ "$CURRENT_INSTALLER_STATE" != "$PREVIOUS_INSTALLER_STATE" ]; then
+            info $(echo "$CURRENT_INSTALLER_STATE" | grep -v "$PREVIOUS_INSTALLER_STATE")
+        fi
+        PREVIOUS_INSTALLER_STATE="$CURRENT_INSTALLER_STATE"
+        sleep 1
+    done
+}
+
 wait_for_k8s_ready () {
     local MAX_RETRIES=$1
     while ! k8s_is_healthy; do
@@ -309,6 +330,7 @@ install () {
     install_images
     install_kubernetes
     install_fp_components
+    check_application_install_status
 }
 
 stop () {
