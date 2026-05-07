@@ -12,6 +12,11 @@
   - [Ansible](#Ansible)
   - [Terraform](#Terraform)
 
+## Minimum Requirements
+
+- Minimal (no components): 2 CPU, 4GB Memory
+- Recommended: 4 CPU, 8GB Memory
+
 ## Create A New Cluster
 
 ```shell
