@@ -132,11 +132,24 @@ k8s_is_healthy () {
 check_application_install_status () {
 
     get_installer_state () {
-        fpk -n fairport logs fairport-installer-0 | tac | sed '/Detected changes/q' | tac | sed 1d | grep -E "NAME:|STATUS|helmfile apply succeeded" | paste - -
+        fpk -n fairport logs fairport-installer-0 2>&1 | tac | sed '/Detected changes/q' | tac | sed 1d | grep -E "NAME:|STATUS|helmfile apply succeeded" | paste - -
     }
 
-    info "Installing applications, this may take a few minutes..."
+    info "Wait for fairport installer to start..."
     MAX_RETRIES=300
+    for I in $(seq 1 $MAX_RETRIES); do
+        fpk get ns | grep -q "fairport" && NS_OK=true
+        fpk -n fairport get pods | grep -q "fairport-installer-0.* Running .*" && POD_OK=true
+        [ "$NS_OK" ] && [ "$POD_OK" ] && info "Fairport installer has started" && sleep 5 && break
+        [ $I -ge 20 ] && info "Waiting for fairport installer to start..."
+        if [ $I -ge $MAX_RETRIES ]; then
+            [ "$NS_OK" ] || crit "Fairport installer namespace 'fairport' not found, check 'fpk get ns' for details"
+            [ "$POD_OK" ] || crit "Fairport installer pod 'fairport-installer-0' not running, check 'fpk -n fairport get pods' for details"
+        fi
+    done
+
+    info "Installing applications, this may take a few minutes..."
+    MAX_RETRIES=600
     for I in $(seq 1 $MAX_RETRIES); do
         CURRENT_INSTALLER_STATE=$(get_installer_state)
         echo "$INSTALLER_STATE" | grep -q "helmfile apply succeeded" && info "Installation complete, you can now use 'fpk' to interact with your cluster" && return 0
