@@ -358,6 +358,9 @@ uninstall () {
     run_cmd 'rm -rf /var/lib/rancher || true'
     run_cmd 'rm -rf /etc/rancher || true'
     run_cmd 'rm -rf /usr/local/bin/rke*'
+    run_cmd 'rm -rf /sys/fs/bpf/cilium || true'
+    run_cmd 'rm -rf /opt/cni/bin/ || true'
+    run_cmd 'rm -rf /etc/cni/net.d/ || true'
     exit 0
 }
 
