@@ -27,14 +27,14 @@ check_dependencies () {
 }
 
 check_variables () {
-    if ! [ "$FP_CLUSTER_TOKEN" ]; then
-        warn "Environment variable 'FP_CLUSTER_TOKEN' is not set."
-        warn "Setup will use 'unmanaged' mode"
-        warn "You can obtain a token from https://fairport.io"
-        warn "If you have a token you can set it with 'export FP_CLUSTER_TOKEN=<YOUR_TOKEN>'"
-    else
-        info "Setup will use 'managed' mode"
-    fi
+    #if ! [ "$FP_CLUSTER_TOKEN" ]; then
+    #    warn "Environment variable 'FP_CLUSTER_TOKEN' is not set."
+    #    warn "Setup will use 'unmanaged' mode"
+    #    warn "You can obtain a token from https://fairport.io"
+    #    warn "If you have a token you can set it with 'export FP_CLUSTER_TOKEN=<YOUR_TOKEN>'"
+    #else
+    #    info "Setup will use 'managed' mode"
+    #fi
 
     if echo "$RKE2_TYPE" | egrep -q "server|agent"; then
         export INSTALL_RKE2_TYPE="$RKE2_TYPE"
