@@ -138,8 +138,8 @@ check_application_install_status () {
     info "Wait for fairport installer to start..."
     MAX_RETRIES=300
     for I in $(seq 1 $MAX_RETRIES); do
-        fpk get ns | grep -q "fairport" && NS_OK=true
-        fpk -n fairport get pods | grep -q "fairport-installer-0.* Running .*" && POD_OK=true
+        fpk get ns 2>&1 | grep -q "fairport" && NS_OK=true
+        fpk -n fairport get pods 2>&1 | grep -q "fairport-installer-0.* Running .*" && POD_OK=true
         [ "$NS_OK" ] && [ "$POD_OK" ] && info "Fairport installer has started" && sleep 5 && break
         [ $I -ge 20 ] && info "Waiting for fairport installer to start..."
         if [ $I -ge $MAX_RETRIES ]; then
