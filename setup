@@ -156,7 +156,7 @@ check_application_install_status () {
     MAX_RETRIES=600
     for I in $(seq 1 $MAX_RETRIES); do
         CURRENT_INSTALLER_STATE=$(get_installer_state)
-        echo "$CURRENT_INSTALLER_STATE" | grep -q "helmfile .* succeeded" && info "Installation complete, you can now use 'fpk' to interact with your cluster" && return 0
+        echo "$CURRENT_INSTALLER_STATE" | grep -q "helmfile .* succeeded" && info "Installation complete, you can now use 'fpk' to interact with your cluster and/or add nodes with /usr/local/bin/fp-add-[server|agent]" && return 0
         echo "$CURRENT_INSTALLER_STATE" | grep -q "NAME: fairport, STATUS: failed" && crit "Fairport installation failed, check 'fpk -n fairport logs fairport-installer-0' for details"
         [ $I -ge $MAX_RETRIES ] && crit "Fairport installation is taking too long, check 'fpk -n fairport logs fairport-installer-0' for details"
         if [ "$CURRENT_INSTALLER_STATE" != "$PREVIOUS_INSTALLER_STATE" ]; then
