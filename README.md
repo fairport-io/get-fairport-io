@@ -90,10 +90,7 @@ curl https://get.fairport.io | sudo -E bash -
 ```shell
 curl https://get.fairport.io | sudo bash -s -- uninstall
 ```
-
 ## Architecture
-![Architecture](architecture.svg)
-
 
 ## Infrastrcture As Code
 
