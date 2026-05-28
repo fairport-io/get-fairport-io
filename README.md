@@ -147,6 +147,8 @@ People and/or organizations may want to manage their clusters using Infrastructu
 > - Air-Gap & offline capabilities.
 > - Plug & Play capabilities with many CNI providers and architectures.
 > - Closely follows and conforms to upstream Kubernetes development.
+> - Works with almost any Linux distribution that uses systemd (and even limited support for Windows).
+> - Possible to run locally on Linux, Windows, or MacOS (with VMs): https://github.com/fairport-io/fairport-io/blob/main/docs/LIMA.md
 > - Well documented and supported.
 
 > [!NOTE]
