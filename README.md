@@ -27,7 +27,7 @@ curl https://get.fairport.io | sudo bash -
   - [Capabilities](#capabilities)
   - [Limitations](#limitations)
   - [Network](#network)
--[Air-Gap](#air-gap)
+- [Air-Gap](#air-gap)
 
 # Operations
 
