@@ -145,7 +145,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 > - Approved for government use.
 > - FIPS & SELinux compatible.
 > - Air-Gap & offline capabilities.
-> - Plug & Play capabilities with many CNI providers and architecture.
+> - Plug & Play capabilities with many CNI providers and architectures.
 > - Closely follows and conforms to upstream Kubernetes development.
 > - Well documented and supported.
 
