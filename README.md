@@ -169,8 +169,9 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Pods Per Node**                | 256       | Yes          | The maximum number of pods supported in the default configuration per node. |
 | **Pods Per Cluster**             | 1,048,576 | Yes          | The maximum number of pods supported in the default configuration per cluster. |
 | **Services Per Cluster**         | 4,194,304 | Yes          | The maximum number of services supported in the default configuration per cluster. |
-| **Minimum CPUs Per Node**        | 2         | Auto         | The recommended absolute minimum number of CPUs a node should have. |
-| **Minimum Memory (GB) Per Node** | 8         | Auto         | The recommended absolute minimum number of Memory a node should have. |
+| **Minimum CPUs Per Node**        | 2         | N/A          | The recommended absolute minimum number of CPUs a node should have. |
+| **Minimum Memory (GB) Per Node** | 8         | N/A          | The recommended absolute minimum number of Memory a node should have. |
+| **Disk Space**                   | 5%        | Yes          | Nodes should maintain under 85% disk utilization on the partition being used for container image storage. At 85%, Kubelet automatically deletes unused container images. If utilization grows beyond that and reaches 95% (5% available), the node flags DiskPressure and begins evicting active pods. |
 
 ## Network
 
@@ -181,13 +182,13 @@ People and/or organizations may want to manage their clusters using Infrastructu
 > - BGP and Native routing modes can also still be configured if required.
 > - Works with existing networks.
 
-| Capabilities                        | Description |
-| :---                                | :---        |
-| *eBPF*                              | Executes code directly within the Linux kernel, minimizing latency and drastically increasing throughput and Requests Per Second (RPS) compared to traditional iptables. |
-| *Kube-Proxy Replacement*            | Completely bypasses legacy kube-proxy for load balancing, removing overhead and scaling more efficiently in large clusters. |
-| *Service Mesh*                      | Replaces the need for heavy, resource-intensive sidecar proxies (like Istio), reducing memory and CPU footprints while handling service mesh features directly in the kernel. |
-| *Network Policy Enforcement*        | Enforce firewall-type policies in the cluster, allowing or denying ingress and egress traffic for pods or workloads based on labels. |
-| *Observability*                     | Cilium can work with the Hubble tool to provide real time traffic observability. |
-| *Transparent Encryption-In-Transit* | All data-in-transit between pods is encrypted via Wireguard. |
-| *Configurable Routing Modes*        | While VXLAN is the default, Cilium can integrate with BGP or native routing to expose pods directly to a network. |
-| *IPv4 & IPv6*                       | Cilium will work for IPv4 and/or IPv6. |
+| Capabilities                          | Description |
+| :---                                  | :---        |
+| **eBPF**                              | Executes code directly within the Linux kernel, minimizing latency and drastically increasing throughput and Requests Per Second (RPS) compared to traditional iptables. |
+| **Kube-Proxy Replacement**            | Completely bypasses legacy kube-proxy for load balancing, removing overhead and scaling more efficiently in large clusters. |
+| **Service Mesh**                      | Replaces the need for heavy, resource-intensive sidecar proxies (like Istio), reducing memory and CPU footprints while handling service mesh features directly in the kernel. |
+| **Network Policy Enforcement**        | Enforce firewall-type policies in the cluster, allowing or denying ingress and egress traffic for pods or workloads based on labels. |
+| **Observability**                     | Cilium can work with the Hubble tool to provide real time traffic observability. |
+| **Transparent Encryption-In-Transit** | All data-in-transit between pods is encrypted via Wireguard. |
+| **Configurable Routing Modes**        | While VXLAN is the default, Cilium can integrate with BGP or native routing to expose pods directly to a network. |
+| **IPv4 & IPv6**                       | Cilium will work for IPv4 and/or IPv6. |
