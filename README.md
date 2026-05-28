@@ -177,6 +177,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 > - The pod/service IP ranges can be re-used - traffic to and from outside the cluster is masqueraded (NATed) to the instance(s) running the workload.
 > - Allows for clusters spanning on-prem and cloud instances.
 > - BGP and Native routing modes can also still be configured if required.
+> - Works with existing networks.
 
 | Capabilities                        | Description |
 | :---                                | :---        |
