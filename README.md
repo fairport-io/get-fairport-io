@@ -201,7 +201,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Configurable Routing Modes**        | While VXLAN is the default, Cilium can integrate with BGP or native routing to expose pods directly to a network. |
 | **IPv4 & IPv6**                       | Cilium will work for IPv4 and/or IPv6. |
 
-# Air Gap
+# Air-Gap
 
 For installation in environments which are offline or with limmited internet connectivity.
 
