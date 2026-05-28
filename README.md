@@ -1,5 +1,7 @@
 # get-fairport-io
 
+An opinionated full stack platform including everything from bare-metal provisioning to AI inference/training and everything in between. Simple enough to be installed and managed by a single person, powerful enough to support thousdands of machines, gpus, and developers.
+
 # Quick Start
 
 ```shell
