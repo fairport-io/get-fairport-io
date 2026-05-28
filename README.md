@@ -180,6 +180,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Minimum CPUs Per Node**        | 2         | N/A          | The recommended absolute minimum number of CPUs a node should have. |
 | **Minimum Memory (GB) Per Node** | 8         | N/A          | The recommended absolute minimum number of Memory a node should have. |
 | **Disk Space**                   | 5%        | Yes          | Nodes should maintain under 85% disk utilization on the partition being used for container image storage. At 85%, Kubelet automatically deletes unused container images. If utilization grows beyond that and reaches 95% (5% available), the node flags DiskPressure and begins evicting active pods. |
+| **Certificate Age**              | 1 Year    | No           | Certificates used by Kubelet and the Kubernetes API Server need to be rotated once every 365 days.  To generate new certificates, the system must restart the rke2 service.  If the cluster is routinely upgraded (as it should be) this will update certificates and it shouldn't be an issue.  If time between upgrades is more than one year, to manually rotate run: `systemctl restart rke2-agent` for workers and `systemctl restart rke2-server` for control-plane nodes. |
 
 ## Network
 
