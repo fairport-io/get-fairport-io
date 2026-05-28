@@ -1,6 +1,6 @@
 # get-fairport-io
 
-An opinionated full stack platform including everything from bare-metal provisioning to AI inference/training and everything in between. Simple enough to be installed and managed by a single person, powerful enough to support thousdands of machines, gpus, and developers.
+An opinionated full stack platform including everything from bare-metal provisioning to AI inference/training and everything in between. Simple enough to be installed and managed by a single person, powerful enough to support thousands of machines, gpus, and developers.
 
 # Quick Start
 
@@ -27,6 +27,7 @@ curl https://get.fairport.io | sudo bash -
   - [Capabilities](#capabilities)
   - [Limitations](#limitations)
   - [Network](#network)
+-[Air-Gap](#air-gap)
 
 # Operations
 
@@ -36,12 +37,12 @@ curl https://get.fairport.io | sudo bash -
 > Minimum Requirements: 2 CPU, 8GB Memory (More is always better!)
 
 > [!IMPORTANT]
-> By default, the cluster uses `100.64.0.0/10` (CGNAT & ULA ranges) for pods & services.  Use different range if it overlaps with any internal networks or if you use an application like tailscale by following this example:
+> By default, the cluster uses `100.64.0.0/10` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
 >
 > `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
 
 > [!IMPORTANT]
-> To override default values from the Fairport helm chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
+> To override default values from the Fairport Helm Chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
 >
 > `export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml && echo "kube-vip:\n  enabled: false" > $FAIRPORT_CONFIG_FILE`
 
@@ -103,6 +104,13 @@ curl https://get.fairport.io | sudo -E bash -
 
 ## Upgrades
 
+On the target machine change your Kubernetes version re-run the installer with the `RKE2_VERSION` set.  The verions can be retrieved from https://github.com/rancher/rke2/releases.
+
+```
+export RKE2_VERSION=vX.Y.Z+rke2r1
+curl https://get.fairport.io | sudo -E bash -
+```
+
 ## Uninstall
 
 ```shell
@@ -132,7 +140,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 > [!NOTE]
 > The Fairport stack is built on top of RKE2.  The rationale being:
 > - Ultra-lightweight (ships in a single binary).
-> - Only requires only 2CPUs and 8GB of memory.
+> - Only requires 2CPUs and 8GB of memory.
 > - Simple to setup.
 > - Approved for government use.
 > - FIPS & SELinux compatible.
@@ -192,3 +200,10 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Transparent Encryption-In-Transit** | All data-in-transit between pods is encrypted via Wireguard. |
 | **Configurable Routing Modes**        | While VXLAN is the default, Cilium can integrate with BGP or native routing to expose pods directly to a network. |
 | **IPv4 & IPv6**                       | Cilium will work for IPv4 and/or IPv6. |
+
+# Air Gap
+
+For installation in environments which are offline or with limmited internet connectivity.
+
+> [!NOTE]
+> Documentation WIP
