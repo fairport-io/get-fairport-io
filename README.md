@@ -24,6 +24,7 @@ curl https://get.fairport.io | sudo bash -
   - [Diagrams](#diagrams)
   - [Capabilities](#capabilities)
   - [Limitations](#limitations)
+  - [Network](#network)
 
 # Operations
 
@@ -142,7 +143,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 > Additional capabilities of Fairport's stack which are not part of Kubernetes and/or RKE2 can be found here: https://github.com/fairport-io/fairport-io/tree/main/charts/fairport#default-features
 
 | Capabilities                 | Description |
-| :---                         | :--- |
+| :---                         | :---        |
 | **High Availability**        | Both the control-plane and worker nodes can have redundant nodes to ensure high availability.  This means that if there are 3 control-plane nodes and one dies, the cluster will continue to work without intervention.  This also means that if your app has 3 replicas and one dies, it will continue to run normally if properly configured. This also means you can migrate control-plane nodes and workloads without downtime |
 | **Service Discovery**        | Workloads inside the cluster can use service discovery to find and connect to other containers and services using names. |
 | **Scaling/Autoscaling**      | Policies can be configured to either manually or automatically add or remove containers to a workload. |
@@ -169,3 +170,21 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Minimum CPUs Per Node**        | 2         | Auto         | The recommended absolute minimum number of CPUs a node should have. |
 | **Minimum Memory (GB) Per Node** | 8         | Auto         | The recommended absolute minimum number of Memory a node should have. |
 
+## Network
+
+> [!NOTE]
+> The default cluster configuration uses Cilium in VXLAN (Virtual Extensible Local Area Network) routing mode - the default for cilium on RKE2.  This means an overlay network is created on top of the nodes.  The rationale being:
+> - The pod/service IP ranges can be re-used - traffic to and from outside the cluster is masqueraded (NATed) to the instance(s) running the workload.
+> - Allows for clusters spanning on-prem and cloud instances.
+> - BGP and Native routing modes can also still be configured if required.
+
+| Capabilities                        | Description |
+| :---                                | :---        |
+| *eBPF*                              | Executes code directly within the Linux kernel, minimizing latency and drastically increasing throughput and Requests Per Second (RPS) compared to traditional iptables. |
+| *Kube-Proxy Replacement*            | Completely bypasses legacy kube-proxy for load balancing, removing overhead and scaling more efficiently in large clusters. |
+| *Service Mesh*                      | Replaces the need for heavy, resource-intensive sidecar proxies (like Istio), reducing memory and CPU footprints while handling service mesh features directly in the kernel. |
+| *Network Policy Enforcement*        | Enforce firewall-type policies in the cluster, allowing or denying ingress and egress traffic for pods or workloads based on labels. |
+| *Observability*                     | Cilium can work with the Hubble tool to provide real time traffic observability. |
+| *Transparent Encryption-In-Transit* | All data-in-transit between pods is encrypted via Wireguard. |
+| *Configurable Routing Modes*        | While VXLAN is the default, Cilium can integrate with BGP or native routing to expose pods directly to a network. |
+| *IPv4 & IPv6*                       | Cilium will work for IPv4 and/or IPv6. |
