@@ -33,7 +33,7 @@ curl https://get.fairport.io | sudo bash -
 > Minimum Requirements: 2 CPU, 8GB Memory (More is always better!)
 
 > [!IMPORTANT]
-> By default, the cluster uses `100.64.0.0/10` (CGNAT Range) for pods & services.  Use different range if it overlaps with any internal networks or if you use an application like tailscale by following this example:
+> By default, the cluster uses `100.64.0.0/10` (CGNAT & ULA ranges) for pods & services.  Use different range if it overlaps with any internal networks or if you use an application like tailscale by following this example:
 >
 > `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
 
@@ -126,8 +126,20 @@ People and/or organizations may want to manage their clusters using Infrastructu
 
 ## Capabilities
 
-> [!IMPORTANT]
-> 
+> [!NOTE]
+> The Fairport stack is built on top of RKE2.  The rationale being:
+> - Ultra-lightweight (ships in a single binary).
+> - Only requires only 2CPUs and 8GB of memory.
+> - Simple to setup.
+> - Approved for government use.
+> - FIPS & SELinux compatible.
+> - Air-Gap & offline capabilities.
+> - Plug & Play capabilities with many CNI providers and architecture.
+> - Closely follows and conforms to upstream Kubernetes development.
+> - Well documented and supported.
+
+> [!NOTE]
+> Additional capabilities of Fairport's stack which are not part of Kubernetes and/or RKE2 can be found here: https://github.com/fairport-io/fairport-io/tree/main/charts/fairport#default-features
 
 | Capabilities                 | Description |
 | :---                         | :--- |
@@ -145,6 +157,8 @@ People and/or organizations may want to manage their clusters using Infrastructu
 
 ## Limitations
 
+> [!IMPORTANT]
+> The default configuration will use CGNAT (Carrier Grade NAT)  IPv4 range and the ULA (Unique Local Address) IPv6 range but is completely configurable at cluster creation time.  This is because many companies use a lot of RFC1918 address space already so using these ranges should prevent ip address conflicts.  Docs: get-fairport-io/setup at main · fairport-io/get-fairport-io 
 
 | Limitation                       | Value     | Configurable | Description |
 | :---                             | :---      | :---         | :---        |
