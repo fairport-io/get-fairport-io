@@ -1,5 +1,11 @@
 # get-fairport-io
 
+# Quick Start
+
+```shell
+curl https://get.fairport.io | sudo bash -
+```
+
 # Table of Contents
 
 - [Quick Start](#quick-start)
@@ -18,12 +24,6 @@
   - [Diagrams](#diagrams)
   - [Capabilities](#capabilities)
   - [Limitations](#limitations)
-
-# Quick Start
-
-```shell
-curl https://get.fairport.io | sudo bash -
-```
 
 # Operations
 
