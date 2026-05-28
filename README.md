@@ -2,7 +2,7 @@
 
 # Table of Contents
 
-- [Minimum Requirements](#minimum-requirements)
+- [Quick Start](#quick-start)
 - [Operations](#operations)
   - [Create A New Cluster](#create-a-new-cluster)
   - [Add Node To Existing Cluster](#add-node-to-existing-cluster)
@@ -12,35 +12,39 @@
   - [Upgrades](Upgrades)
   - [Uninstall](#uninstall)
   - [Infrastructure As Code](#infrastructure-as-code)
-    - [Ansible](#Ansible)
-    - [Terraform](#Terraform)
-- [Architecture](#Architecture)
-  - Diagrams
-  - Capabilities
-  - Limitations
+    - [Ansible](#ansible)
+    - [Terraform](#terraform)
+- [Architecture](#architecture)
+  - [Diagrams](#diagrams)
+  - [Capabilities](#capabilities)
+  - [Limitations](#limitations)
 
-# Minimum Requirements
-
-- Minimal (no components): 2 CPU, 4GB Memory
-- Recommended: 4 CPU, 8GB Memory (More is always better!)
-
-# Operations
-
-## Create A New Cluster
+# Quick Start
 
 ```shell
 curl https://get.fairport.io | sudo bash -
 ```
 
-> [!NOTE]
-> By default, the cluster will use `100.64.0.0/10` (CGNAT Range) for pods and services in a configuration which allows for up to 4096 nodes per cluster.  If this overlaps with any of your internal networks or apps like Tailscale, you can set a different range like this example:
+# Operations
+
+## Create A New Cluster
+
+> [!IMPORTANT]
+> Minimum Requirements: 2 CPU, 8GB Memory (More is always better!)
+
+> [!IMPORTANT]
+> By default, the cluster uses `100.64.0.0/10` (CGNAT Range) for pods & services.  Use different range if it overlaps with any internal networks or if you use an application like tailscale by following this example:
 >
 > `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
 
-> [!NOTE]
+> [!IMPORTANT]
 > To override default values from the Fairport helm chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
 >
 > `export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml && echo "kube-vip:\n  enabled: false" > $FAIRPORT_CONFIG_FILE`
+
+```shell
+curl https://get.fairport.io | sudo bash -
+```
 
 ## Add Node To Existing Cluster
 
@@ -53,7 +57,7 @@ Log into a control-plane/server node and run one of the following commands to ge
 
 ### Using FP Node Manager
 
-> [!NOTE]
+> [!IMPORTANT]
 > Work in progress
 
 The kubernetes cluster can also add nodes if a SSH public key is installed on the target nodes.
@@ -121,6 +125,9 @@ People and/or organizations may want to manage their clusters using Infrastructu
 ![Architecture](architecture.svg)
 
 ## Capabilities
+
+> [!IMPORTANT]
+> 
 
 | Capabilities                 | Description |
 | :---                         | :--- |
