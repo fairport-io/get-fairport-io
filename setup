@@ -301,7 +301,7 @@ EOF
 install_fp_helm_chart () {
     info "Installing Fairport components"
     if [ "$FAIRPORT_CONFIG_FILE" ]; then
-        FAIRPORT_CONFIG_CONTENT=$(cat $FAIRPORT_CONFIG_FILE | sed 's/^/    /')
+        FAIRPORT_CONFIG_CONTENT=$(sed -e '1i \ \ \ \ values:' -e 's/^/      /' "$FAIRPORT_CONFIG_FILE")
         info "Using Fairport config from $FAIRPORT_CONFIG_FILE"
     fi
     cat << EOF | fpk apply -f -
