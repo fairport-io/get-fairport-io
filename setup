@@ -226,8 +226,8 @@ install_kubernetes () {
         run_cmd mkdir -p $RKE2_BINARIES_DIR/$RKE2_VERSION
         [ ! -f "$RKE2_BINARIES_BUNDLE_FILE" ] && run_cmd curl -sL $RKE2_BINARY_URL -o $RKE2_BINARIES_BUNDLE_FILE
         run_cmd tar -xf $RKE2_BINARIES_BUNDLE_FILE -C $RKE2_BINARIES_DIR/$RKE2_VERSION
-        run_cmd cp $RKE2_BINARIES_DIR/$RKE2_VERSION/bin/* /usr/local/bin/
-        run_cmd cp $RKE2_BINARIES_DIR/$RKE2_VERSION/lib/systemd/system/rke2* /etc/systemd/system/
+        run_cmd cp -f $RKE2_BINARIES_DIR/$RKE2_VERSION/bin/* /usr/local/bin/
+        run_cmd cp -f $RKE2_BINARIES_DIR/$RKE2_VERSION/lib/systemd/system/rke2* /etc/systemd/system/
         generate_rke2_config
     fi
 
