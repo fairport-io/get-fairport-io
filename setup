@@ -76,7 +76,7 @@ check_variables () {
     ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
     echo "$ARCH" | egrep -q "amd64|x86_64" && ARCH="amd64"
     echo "$ARCH" | egrep -q "arm64|aarch64" && ARCH="arm64"
-    RKE2_VERSION="v1.33.3+rke2r1"
+    [ "$RKE2_VERSION" ] ||  RKE2_VERSION=$(rke2 --version 2>&1 | grep -o "v[0-9]\S*") || RKE2_VERSION="v1.33.3+rke2r1"
     RKE2_VERSION_URLSAFE=$(echo "$RKE2_VERSION" | sed 's/+/%2B/g')
     RKE2_IMAGE_URL="https://github.com/rancher/rke2/releases/download/${RKE2_VERSION_URLSAFE}/rke2-images.${OS}-${ARCH}.tar.zst"
     RKE2_IMAGE_DIR="/var/lib/rancher/rke2/agent/images"
@@ -219,8 +219,8 @@ EOF
 }
 
 install_kubernetes () {
-    EXISTING_RKE2_VERSION=$(rke2 --version 2>&1 | grep -o "v[0-9]\S*")
-    if [ "$EXISTING_RKE2_VERSION" != "$RKE2_VERSION" ]; then
+
+    if ! k8s_same_version; then
         [ ! -f "$RKE2_BINARY_FILE" ] && info "Installing rke2 ($RKE2_VERSION) from $RKE2_BINARY_URL"
         [ -f "$RKE2_BINARY_FILE" ] && info "Upgrading rke2 ($RKE2_VERSION) from $RKE2_BINARY_URL"
         run_cmd mkdir -p $RKE2_BINARIES_DIR/$RKE2_VERSION
