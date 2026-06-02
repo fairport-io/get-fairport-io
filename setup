@@ -300,10 +300,14 @@ EOF
 
 install_fp_helm_chart () {
     info "Installing Fairport components"
+
+    local VALUES_BLOCK=""
     if [ "$FAIRPORT_CONFIG_FILE" ]; then
-        FAIRPORT_CONFIG_CONTENT=$(sed -e '1i \ \ \ \ values:' -e 's/^/      /' "$FAIRPORT_CONFIG_FILE")
         info "Using Fairport config from $FAIRPORT_CONFIG_FILE"
+        # Parse the file and prepend 'valuesContent: |-'
+        VALUES_BLOCK="  valuesContent: |-\n$(sed -e '1i \ \ \ \ values:' -e 's/^/      /' "$FAIRPORT_CONFIG_FILE")"
     fi
+
     cat << EOF | fpk apply -f -
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
@@ -317,8 +321,7 @@ spec:
   createNamespace: true
   failurePolicy: abort
   timeout: 10m
-  valuesContent: |-
-$FAIRPORT_CONFIG_CONTENT
+$(echo -e "$VALUES_BLOCK")
 EOF
 }
 
