@@ -18,6 +18,7 @@ curl https://get.fairport.io | sudo bash -
     - [Using FP Node Manager](#using-fp-node-manager)
     - [Manually](#manually)
   - [Kubernetes Version Upgrades](#kubernetes-version-upgrades)
+  - [Fairport Version Upgrades](#fairport-version-upgrades)
   - [Uninstall](#uninstall)
   - [Infrastructure As Code](#infrastructure-as-code)
     - [Ansible](#ansible)
@@ -105,17 +106,31 @@ curl https://get.fairport.io | sudo -E bash -
 ## Kubernetes Version Upgrades
 
 > [!IMPORTANT]
-> For clusters:
+> For all:
 > - Read the Kubernetes blog page for change for your target version (https://kubernetes.io/blog/) before upgrading.
 > - Use tools like [kubepug](https://github.com/kubepug/kubepug) to scan for deprecated objects before upgrading.
+
+> [!IMPORTANT]
+> For clusters:
 > - Only upgrade a maximum of one minor version at a time (v1.20 -> 1.21).
 > - Upgrade control-plane nodes before worker nodes.
 > - Upgrade one node at time unless you're absolutely sure you know what you're doing.
 
-On the target machine change your Kubernetes version from https://github.com/rancher/rke2/releases and then re-run the installer with the `RKE2_VERSION` environment variable set.
+On the target machine change the Kubernetes version from https://github.com/rancher/rke2/releases and then re-run the installer with the `RKE2_VERSION` environment variable set.
 ```shell
 export RKE2_VERSION=vX.Y.Z+rke2r1
 curl https://get.fairport.io | sudo -E bash -
+```
+
+## Fairport Version Upgrades
+
+> [!IMPORTANT]
+> Check the release changelogs before upgrading (https://github.com/fairport-io/fairport-io/releases).
+
+On a control-plane machine (or with a properly configured kubeconfig), patch the fairport `helmchart` object with the target version (https://github.com/fairport-io/fairport-io/releases):
+```shell
+# Change X.Y.Z to the target version:
+fpk patch helmchart fairport -n kube-system --type merge -p '{"spec":{"version":"X.Y.Z"}}'
 ```
 
 ## Uninstall
