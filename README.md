@@ -62,6 +62,8 @@ curl https://get.fairport.io | sudo bash -
 > [!NOTE]
 > You can read and verify the source code before running the installer here: https://get.fairport.io/
 
+To create a new cluster run this command:
+
 ```shell
 curl https://get.fairport.io | sudo bash -
 ```
