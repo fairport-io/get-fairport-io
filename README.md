@@ -214,6 +214,8 @@ People and/or organizations may want to manage their clusters using Infrastructu
 
 > [!IMPORTANT]
 > Documentation of the air-gap process is a work-in-progres.  This feature may not be available for GA yet.
+
+> [!IMPORTANT]
 > Ensure that your target machine has at least double the amount of disk as the installer size.
 
 For installation in environments which are offline or with limmited internet connectivity.
