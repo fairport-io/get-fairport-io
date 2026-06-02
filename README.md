@@ -38,7 +38,7 @@ curl https://get.fairport.io | sudo bash -
 > Minimum Requirements: 2 CPU, 8GB Memory, 100GB SSD (or NVME) (More is always better!)
 
 > [!IMPORTANT]
-> By default, the cluster uses `100.64.0.0/10` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
+> By default, the cluster uses `100.64.0.0/10` & `fd00:10:42::/47` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
 >
 > `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
 
