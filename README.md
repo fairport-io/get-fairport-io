@@ -106,6 +106,8 @@ curl https://get.fairport.io | sudo -E bash -
 
 > [!IMPORTANT]
 > For clusters:
+> - Read the Kubernetes blog page for change for your target version (https://kubernetes.io/blog/) before upgrading.
+> - Use tools like [kubepug](https://github.com/kubepug/kubepug) to scan for deprecated objects before upgrading.
 > - Only upgrade a maximum of one minor version at a time (v1.20 -> 1.21).
 > - Upgrade control-plane nodes before worker nodes.
 > - Upgrade one node at time unless you're absolutely sure you know what you're doing.
