@@ -363,94 +363,18 @@ stop () {
     exit 0
 }
 
-uninstall () {
-    info "Uninstall k8s"
-
-    # Stop services cleanly before anything else
-    systemctl stop rke2-server rke2-agent 2>/dev/null || true
-    systemctl disable rke2-server rke2-agent 2>/dev/null || true
-
-    # Wait for processes to actually die before we start cleaning
-    sleep 3
-
-    # Uninstall script
-    run_cmd '/usr/local/bin/rke2-uninstall.sh || true'
-
-    # Cilium cgroup2 mounts
-    if mount | grep -q '/run/cilium/cgroupv2'; then
-        run_cmd 'umount /run/cilium/cgroupv2 || true'
-    fi
-    if mount | grep -q '/var/run/cilium/cgroupv2'; then
-        run_cmd 'umount /var/run/cilium/cgroupv2 || true'
-    fi
-
-    # Cilium run state — sockets, pid files, netns, envoy
-    run_cmd 'rm -rf /run/cilium/ || true'
-    run_cmd 'rm -rf /var/run/cilium/ || true'
-    run_cmd 'rm -rf /run/k3s/ || true'
-
-    # Cilium network interfaces
-    for iface in cilium_host cilium_net cilium_vxlan lxc_health; do
-        if ip link show "$iface" &>/dev/null; then
-            run_cmd "ip link delete $iface 2>/dev/null || true"
-        fi
-    done
-
-    # lxc* veth pairs created per-pod by Cilium
-    for iface in $(ip link show 2>/dev/null | grep -oP '(?<=\d: )lxc[a-z0-9]+'); do
-        run_cmd "ip link delete $iface 2>/dev/null || true"
-    done
-
-    # Cilium's WireGuard interface
-    if ip link show cilium_wg0 &>/dev/null; then
-        run_cmd 'ip link delete cilium_wg0 2>/dev/null || true'
-    fi
-
-    # We do NOT touch any rule we can't positively identify as Cilium's 
-    # From cilium source: (pkg/datapath/linux/routing/routing.go)
-    if ip rule show | grep -q 'lookup 2004'; then
-        run_cmd 'ip rule del fwmark 0x200/0xf00 lookup 2004 2>/dev/null || true'
-        run_cmd 'ip route flush table 2004 2>/dev/null || true'
-    fi
-
-    if ip rule show | grep -qP 'prio 5210.+0x80000/0xff0000'; then
-        run_cmd 'ip rule del prio 5210 2>/dev/null || true'
-    fi
-    if ip rule show | grep -qP 'prio 5230.+0x80000/0xff0000'; then
-        run_cmd 'ip rule del prio 5230 2>/dev/null || true'
-    fi
-    if ip rule show | grep -qP 'prio 5250.+0x80000/0xff0000'; then
-        run_cmd 'ip rule del prio 5250 2>/dev/null || true'
-    fi
-    if ip rule show | grep -qP 'prio 5270.+0x80000/0xff0000'; then
-        run_cmd 'ip rule del prio 5270 2>/dev/null || true'
-    fi
-
-    # Only flush if ALL routes in it go via cilium_wg0.
-    # If even one route goes via anything else (tailscale0, wg0, eth0...)
-    # we leave the entire table alone.
-    if ip route show table 52 2>/dev/null | grep -v '^$' | grep -q '.'; then
-        if ! ip route show table 52 2>/dev/null | grep -v '^$' | grep -qv 'cilium_wg0'; then
-            run_cmd 'ip route flush table 52 2>/dev/null || true'
-        else
-            info "Table 52 contains non-cilium_wg0 routes (likely Tailscale) — skipping"
-        fi
-    fi
-
-    # Clean the cilium subtree
-    run_cmd 'rm -rf /sys/fs/bpf/cilium || true'
-    run_cmd 'rm -rf /sys/fs/bpf/tc/globals/* || true'
-
-    # Filesystem cleanup
-    run_cmd 'rm -rf /var/lib/rancher || true'
-    run_cmd 'rm -rf /etc/rancher || true'
-    run_cmd 'rm -rf /usr/local/bin/rke* || true'
-    run_cmd 'rm -rf /opt/cni/bin/ || true'
-    run_cmd 'rm -rf /etc/cni/net.d/ || true'
-    run_cmd 'rm -rf /var/lib/cni/ || true'
-
-    exit 0
-}
+ uninstall () {
+     info "Uninstall k8s"
+     run_cmd '/usr/local/bin/rke2-uninstall.sh || true'
+     run_cmd 'rm -rf /var/lib/rancher || true'
+     run_cmd 'rm -rf /etc/rancher || true'
+     run_cmd 'rm -rf /usr/local/bin/rke* || true'
+     run_cmd 'rm -rf /sys/fs/bpf/cilium || true'
+     run_cmd 'rm -rf /opt/cni/bin/ || true'
+     run_cmd 'rm -rf /etc/cni/net.d/ || true'
+     run_cmd 'rm -rf /sys/fs/bpf/tc/globals/* || true'
+     exit 0
+ }
 
 main () {
     check_debug
