@@ -363,13 +363,34 @@ stop () {
 uninstall () {
     info "Uninstall k8s"
     run_cmd '/usr/local/bin/rke2-uninstall.sh || true'
+
+    # Unmount cilium cgroup2 BEFORE deleting /run/cilium
+    run_cmd 'umount /run/cilium/cgroupv2 2>/dev/null || true'
+    run_cmd 'umount /var/run/cilium/cgroupv2 2>/dev/null || true'
+
+    # Clean run state (sockets, pid files, etc.)
+    run_cmd 'rm -rf /run/cilium/ || true'
+    run_cmd 'rm -rf /var/run/cilium/ || true'
+    run_cmd 'rm -rf /run/k3s/ || true'
+
+    # Remove stale ip rules left by Cilium
+    run_cmd 'ip rule del fwmark 0x200/0xf00 lookup 2004 2>/dev/null || true'
+    run_cmd 'ip rule del fwmark 0x80000/0xff0000 lookup main 2>/dev/null || true'
+    run_cmd 'ip rule del fwmark 0x80000/0xff0000 lookup default 2>/dev/null || true'
+    run_cmd 'ip rule del fwmark 0x80000/0xff0000 unreachable 2>/dev/null || true'
+    run_cmd 'ip rule del lookup 52 2>/dev/null || true'
+    run_cmd 'ip route flush table 52 2>/dev/null || true'
+    run_cmd 'ip route flush table 2004 2>/dev/null || true'
+
+    # Your existing cleanup
     run_cmd 'rm -rf /var/lib/rancher || true'
     run_cmd 'rm -rf /etc/rancher || true'
-    run_cmd 'rm -rf /usr/local/bin/rke*'
+    run_cmd 'rm -rf /usr/local/bin/rke* || true'
     run_cmd 'rm -rf /sys/fs/bpf/cilium || true'
     run_cmd 'rm -rf /opt/cni/bin/ || true'
     run_cmd 'rm -rf /etc/cni/net.d/ || true'
     run_cmd 'rm -rf /sys/fs/bpf/tc/globals/* || true'
+
     exit 0
 }
 
