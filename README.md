@@ -212,11 +212,11 @@ People and/or organizations may want to manage their clusters using Infrastructu
 
 # Air-Gap
 
-For installation in environments which are offline or with limmited internet connectivity.
-
 > [!IMPORTANT]
-> Documentation is a work-in-progres.  This feature may not be available for GA yet.
+> Documentation of the air-gap process is a work-in-progres.  This feature may not be available for GA yet.
 > Ensure that your target machine has at least double the amount of disk as the installer size.
+
+For installation in environments which are offline or with limmited internet connectivity.
 
 1. Download the installer tarball: (work-in-progres)
 2. Place the release file onto the target machine.  How this happens will depend heavily on each individual environment, but for simplicy tools like `scp` and `rsync` will work.
