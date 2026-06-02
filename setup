@@ -103,6 +103,7 @@ check_variables () {
     fi
 
     DEFAULT_IPV4=$(ip route get 1 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
+    DEFAULT_IFACE=$(ip route get 1 | sed -n 's/.*dev \([^ ]*\).*/\1/p;q')
     echo "$RKE2_CLUSTER_CIDR" | grep -q ":" && DEFAULT_IPV6=$(ip route get 2001:4860:4860::8888 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
 }
 
@@ -267,6 +268,8 @@ spec:
     kubeProxyReplacement: true
     k8sServiceHost: "${DEFAULT_IPV4}"
     k8sServicePort: "6443"
+    devices: "${DEFAULT_IFACE}"
+    directRoutingDevice: "${DEFAULT_IFACE}"
     operator:
       replicas: 1
     encryption:
