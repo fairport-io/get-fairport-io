@@ -17,7 +17,7 @@ curl https://get.fairport.io | sudo bash -
     - [Using the Helper Script](#using-the-helper-script)
     - [Using FP Node Manager](#using-fp-node-manager)
     - [Manually](#manually)
-  - [Upgrades](Upgrades)
+  - [Kubernetes Version Upgrades](#kubernetes-version-upgrades)
   - [Uninstall](#uninstall)
   - [Infrastructure As Code](#infrastructure-as-code)
     - [Ansible](#ansible)
@@ -34,7 +34,7 @@ curl https://get.fairport.io | sudo bash -
 ## Create A New Cluster
 
 > [!IMPORTANT]
-> Minimum Requirements: 2 CPU, 8GB Memory (More is always better!)
+> Minimum Requirements: 2 CPU, 8GB Memory, 100GB SSD (or NVME) (More is always better!)
 
 > [!IMPORTANT]
 > By default, the cluster uses `100.64.0.0/10` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
@@ -102,11 +102,16 @@ export RKE2_TOKEN=""  # Content of /var/lib/rancher/rke2/server/node-token
 curl https://get.fairport.io | sudo -E bash -
 ```
 
-## Upgrades
+## Kubernetes Version Upgrades
 
-On the target machine change your Kubernetes version re-run the installer with the `RKE2_VERSION` set.  The verions can be retrieved from https://github.com/rancher/rke2/releases.
+> [!IMPORTANT]
+> For clusters:
+> - Only upgrade a maximum of one minor version at a time (v1.20 -> 1.21).
+> - Upgrade control-plane nodes before worker nodes.
+> - Upgrade one node at time unless you're absolutely sure you know what you're doing.
 
-```
+On the target machine change your Kubernetes version from https://github.com/rancher/rke2/releases and then re-run the installer with the `RKE2_VERSION` environment variable set.
+```shell
 export RKE2_VERSION=vX.Y.Z+rke2r1
 curl https://get.fairport.io | sudo -E bash -
 ```
@@ -167,6 +172,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Configuration Management** | Operators can manage and update the cluster using yaml configurations. These can be applied from a repo such as an IAC (Infrastructure as Code) git repository using a CI/CD system or manually with the kubectl tool. |
 | **Secret Management**        | The cluster can store and manage sensitive information such as passwords, API keys, and other secrets in a secure and centralized manner. |
 | **Role-Based Access Control (RBAC)** | Provides fine-grained access control to manage user permissions and access to cluster resources. |
+| **Hybrid Cloud**             | Mix and match onprem nodes, cloud nodes, and edge nodes to build your clusters (control-plane recommended to be in the same region or datacenter) |
 
 ## Limitations
 
