@@ -214,5 +214,11 @@ People and/or organizations may want to manage their clusters using Infrastructu
 
 For installation in environments which are offline or with limmited internet connectivity.
 
-> [!NOTE]
-> Documentation WIP
+> [!IMPORTANT]
+> Documentation is a work-in-progres.  This feature may not be available for GA yet.
+> Ensure that your target machine has at least double the amount of disk as the installer size.
+
+1. Download the installer tarball: (work-in-progres)
+2. Place the release file onto the target machine.  How this happens will depend heavily on each individual environment, but for simplicy tools like `scp` and `rsync` will work.
+3. Extract the contents: `sudo tar -xvPf fairport-airgap.tar.gz`
+4. Run the installer (The installer will take the same environment variables as the online installer): `sudo /usr/local/bin/fairport-airgap`
