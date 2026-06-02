@@ -19,6 +19,7 @@ curl https://get.fairport.io | sudo bash -
     - [Manually](#manually)
   - [Kubernetes Version Upgrades](#kubernetes-version-upgrades)
   - [Fairport Version Upgrades](#fairport-version-upgrades)
+  - [Common Configuration Options](#common-configuration-options)
   - [Uninstall](#uninstall)
   - [Infrastructure As Code](#infrastructure-as-code)
     - [Ansible](#ansible)
@@ -149,6 +150,25 @@ On a control-plane machine (or with a properly configured kubeconfig), patch the
 # Change X.Y.Z to the target version:
 fpk patch helmchart fairport -n kube-system --type merge -p '{"spec":{"version":"X.Y.Z"}}'
 ```
+
+## Common Configuration Options
+
+The installer supports all of the RKE2 environment variable configs (https://docs.rke2.io/reference/server_config).  These are some of the more common ones and Fairport configuration options:
+
+| Variable                  | Type | Default | Description |
+| :---                      | :--- | :--- | :--- |
+| `RKE2_TYPE`               | string | `server` | The type of node to install (`server` or `agent`). |
+| `RKE2_SERVER`             | string | *None* | The URL/IP of an existing server node (e.g., `https://<SERVER_IP>:9345`). **Required** if `RKE2_TYPE` is `agent`. |
+| `RKE2_TOKEN`              | string | *None* | The node token used to join the cluster. **Required** if `RKE2_TYPE` is `agent`. |
+| `RKE2_VERSION`            | string | Existing version or `v1.36.1+rke2r2` | The specific RKE2 release version to install (e.g., `v1.36.1+rke2r2`). |
+| `RKE2_CNI`                | string | `cilium` | The Container Network Interface (CNI) plugin to install. |
+| `RKE2_CLUSTER_CIDR`       | string | Auto-detected (`100.64.0.0/12`) | The CIDR block(s) to use for pod IPs. Automatically detects IPv4/IPv6 defaults. |
+| `RKE2_SERVICE_CIDR`       | string | Auto-detected (`100.80.0.0/12`) | The CIDR block(s) to use for service IPs. Automatically detects IPv4/IPv6 defaults. |
+| `FAIRPORT_CHART_VERSION`  | string | `0.3.5` | The version of the Fairport Helm chart to install. |
+| `FAIRPORT_CHART_SOURCE`   | string | `oci://gcr.io/fairport-io/...` | The Helm chart source repository/URL for Fairport. |
+| `FAIRPORT_CHART_NAMESPACE`| string | `fairport` | The dedicated namespace where Fairport components are installed. |
+| `FAIRPORT_CONFIG_FILE`    | string | *None* | Path to a custom YAML file containing Helm values for the Fairport installation. |
+| `FP_DEBUG`                | boolean| `false` | Set to `true` to enable verbose bash debugging output (`set -x`). |
 
 ## Uninstall
 
