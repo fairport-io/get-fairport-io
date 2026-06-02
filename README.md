@@ -40,12 +40,27 @@ curl https://get.fairport.io | sudo bash -
 > [!IMPORTANT]
 > By default, the cluster uses `100.64.0.0/10` & `fd00:10:42::/47` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
 >
-> `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
+> ```
+> export RKE2_CLUSTER_CIDR="10.144.0.0/12"
+> export RKE2_SERVICE_CIDR="10.160.0.0/12"
+> curl https://get.fairport.io | sudo -E bash -
+> ```
 
 > [!IMPORTANT]
 > To override default values from the Fairport Helm Chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
 >
-> `export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml && echo "kube-vip:\n  enabled: false" > $FAIRPORT_CONFIG_FILE`
+> ```
+> export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml
+> cat << EOF > $FAIRPORT_CONFIG_FILE
+> monitoring:
+>   kube-prometheus-stack:
+>     enabled: false
+> EOF
+> curl https://get.fairport.io | sudo -E bash -
+> ```
+
+> [!NOTE]
+> You can read and verify the source code before running the installer here: https://get.fairport.io/
 
 ```shell
 curl https://get.fairport.io | sudo bash -
