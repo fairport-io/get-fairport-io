@@ -51,7 +51,7 @@ curl https://get.fairport.io | sudo bash -
 > </details>
 
 > [!IMPORTANT]
-> To override default values from the Fairport Helm Chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
+> To override default values for the Fairport Helm Chart installation, define them in a file and then set the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
 > <details>
 > <summary>Example</summary>
 >
