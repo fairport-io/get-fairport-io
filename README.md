@@ -40,15 +40,20 @@ curl https://get.fairport.io | sudo bash -
 
 > [!IMPORTANT]
 > By default, the cluster uses `100.64.0.0/10` & `fd00:10:42::/47` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
->
+> <details>
+> <summary>Example</summary>
+> 
 > ```
 > export RKE2_CLUSTER_CIDR="10.144.0.0/12"
 > export RKE2_SERVICE_CIDR="10.160.0.0/12"
 > curl https://get.fairport.io | sudo -E bash -
 > ```
+> </details>
 
 > [!IMPORTANT]
 > To override default values from the Fairport Helm Chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
+> <details>
+> <summary>Example</summary>
 >
 > ```
 > export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml
@@ -59,6 +64,7 @@ curl https://get.fairport.io | sudo bash -
 > EOF
 > curl https://get.fairport.io | sudo -E bash -
 > ```
+> </details>
 
 > [!NOTE]
 > You can read and verify the source code before running the installer here: https://get.fairport.io/
@@ -79,6 +85,8 @@ Log into a control-plane/server node and run one of the following commands to ge
 - **Server/Control-plane**: `/usr/local/bin/fp-add-server`
 
 ### Using FP Node Manager
+<details>
+<summary>Work In Progress</summary>
 
 > [!IMPORTANT]
 > Work in progress
@@ -109,10 +117,14 @@ data:
     echo bye                         # Default: ''
 EOF
 ```
+</details>
 
 ### Manually
 
 You can also generate your own join script by using the following method:
+
+<details>
+<summary>Example</summary>
 
 ```shell
 export RKE2_TYPE=""   # Options: [agent|server]
@@ -120,6 +132,7 @@ export RKE2_SERVER="" # Format: https://<SERVER_IP>:9345
 export RKE2_TOKEN=""  # Content of /var/lib/rancher/rke2/server/node-token
 curl https://get.fairport.io | sudo -E bash -
 ```
+</details>
 
 ## Kubernetes Version Upgrades
 
