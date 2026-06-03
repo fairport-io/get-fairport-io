@@ -66,7 +66,7 @@ curl https://get.fairport.io | sudo bash -
 To create a new cluster run this command:
 
 ```shell
-curl https://get.fairport.io | sudo bash -
+curl -sfL https://get.fairport.io | sudo -E bash -
 ```
 
 ## Add Node To Existing Cluster
