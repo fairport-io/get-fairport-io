@@ -129,7 +129,10 @@ curl https://get.fairport.io | sudo -E bash -
 > - Only upgrade a maximum of one minor version at a time (v1.20 -> 1.21).
 > - Upgrade control-plane nodes before worker nodes.
 > - Upgrade one node at time unless you're absolutely sure you know what you're doing.
-> - On the target machine change the Kubernetes version from https://github.com/rancher/rke2/releases and then re-run the installer with the `RKE2_VERSION` environment variable set.
+
+A full list of available versions is available here:  https://github.com/rancher/rke2/releases
+
+Once you have chosen a version, set the `RKE2_VERSION` environment variable and run the fairport installer:
 
 ```shell
 export RKE2_VERSION=vX.Y.Z+rke2r1
