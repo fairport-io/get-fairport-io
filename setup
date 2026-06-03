@@ -135,7 +135,7 @@ check_application_install_status () {
     [ "$RKE2_TYPE" != "server" ] && return 0
 
     get_installer_state () {
-        fpk -n fairport logs fairport-installer-0 2>&1 | tac | sed '/Detected changes/q' | tac | sed 1d | grep -E "NAME:|STATUS|helmfile apply succeeded" | paste - -
+        fpk -n fairport logs fairport-installer-0 2>&1 | tac | sed '/Detected changes/q' | tac | sed 1d | grep -E "NAME:|STATUS|helmfile .* succeeded" | paste - -
     }
 
     info "Wait for fairport installer to start..."
