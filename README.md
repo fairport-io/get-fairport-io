@@ -17,7 +17,9 @@ curl https://get.fairport.io | sudo bash -
     - [Using the Helper Script](#using-the-helper-script)
     - [Using FP Node Manager](#using-fp-node-manager)
     - [Manually](#manually)
-  - [Upgrades](Upgrades)
+  - [Kubernetes Version Upgrades](#kubernetes-version-upgrades)
+  - [Fairport Version Upgrades](#fairport-version-upgrades)
+  - [Common Configuration Options](#common-configuration-options)
   - [Uninstall](#uninstall)
   - [Infrastructure As Code](#infrastructure-as-code)
     - [Ansible](#ansible)
@@ -34,20 +36,43 @@ curl https://get.fairport.io | sudo bash -
 ## Create A New Cluster
 
 > [!IMPORTANT]
-> Minimum Requirements: 2 CPU, 8GB Memory (More is always better!)
+> Minimum Requirements: 2 CPU, 8GB Memory, 100GB SSD (or NVME) (More is always better!)
 
 > [!IMPORTANT]
-> By default, the cluster uses `100.64.0.0/10` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
->
-> `curl https://get.fairport.io | sudo RKE2_CLUSTER_CIDR="10.144.0.0/12" RKE2_SERVICE_CIDR="10.160.0.0/12" bash -`
+> By default, the cluster uses `100.64.0.0/10` & `fd00:10:42::/47` (CGNAT & ULA ranges) for pods & services.  Use a different range if it overlaps with any internal networks or if you use an application like Tailscale by following this example:
+> <details>
+> <summary>Example</summary>
+> 
+> ```
+> export RKE2_CLUSTER_CIDR="10.144.0.0/12"
+> export RKE2_SERVICE_CIDR="10.160.0.0/12"
+> curl https://get.fairport.io | sudo -E bash -
+> ```
+> </details>
 
 > [!IMPORTANT]
-> To override default values from the Fairport Helm Chart during installation by defining them in a file and then setting the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
+> To override default values for the Fairport Helm Chart installation, define them in a file and then set the `FAIRPORT_CONFIG_FILE` environment variable.  Here is a simple example:
+> <details>
+> <summary>Example</summary>
 >
-> `export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml && echo "kube-vip:\n  enabled: false" > $FAIRPORT_CONFIG_FILE`
+> ```
+> export FAIRPORT_CONFIG_FILE=/opt/fp-values.yaml
+> cat << EOF > $FAIRPORT_CONFIG_FILE
+> monitoring:
+>   kube-prometheus-stack:
+>     enabled: false
+> EOF
+> curl https://get.fairport.io | sudo -E bash -
+> ```
+> </details>
+
+> [!NOTE]
+> You can read and verify the source code before running the installer here: https://get.fairport.io/
+
+To create a new cluster run this command:
 
 ```shell
-curl https://get.fairport.io | sudo bash -
+curl -sfL https://get.fairport.io | sudo -E bash -
 ```
 
 ## Add Node To Existing Cluster
@@ -60,6 +85,8 @@ Log into a control-plane/server node and run one of the following commands to ge
 - **Server/Control-plane**: `/usr/local/bin/fp-add-server`
 
 ### Using FP Node Manager
+<details>
+<summary>Work In Progress</summary>
 
 > [!IMPORTANT]
 > Work in progress
@@ -90,10 +117,14 @@ data:
     echo bye                         # Default: ''
 EOF
 ```
+</details>
 
 ### Manually
 
 You can also generate your own join script by using the following method:
+
+<details>
+<summary>Example</summary>
 
 ```shell
 export RKE2_TYPE=""   # Options: [agent|server]
@@ -101,15 +132,55 @@ export RKE2_SERVER="" # Format: https://<SERVER_IP>:9345
 export RKE2_TOKEN=""  # Content of /var/lib/rancher/rke2/server/node-token
 curl https://get.fairport.io | sudo -E bash -
 ```
+</details>
 
-## Upgrades
+## Kubernetes Version Upgrades
 
-On the target machine change your Kubernetes version re-run the installer with the `RKE2_VERSION` set.  The verions can be retrieved from https://github.com/rancher/rke2/releases.
+> [!IMPORTANT]
+> - Read the Kubernetes blog page for the specific target version (https://kubernetes.io/blog/ ) before upgrading.  It contains things like api additions, deprectations, and other changes.
+> - Use tools like [kubepug](https://github.com/kubepug/kubepug) to scan for deprecated objects before upgrading.
+> - Only upgrade a maximum of one minor version at a time (v1.20 -> 1.21).
+> - Upgrade control-plane nodes before worker nodes.
+> - Upgrade one node at time unless you're absolutely sure you know what you're doing.
 
-```
+A full list of available versions is available here:  https://github.com/rancher/rke2/releases
+
+Once you have chosen a version, set the `RKE2_VERSION` environment variable and run the fairport installer:
+
+```shell
 export RKE2_VERSION=vX.Y.Z+rke2r1
 curl https://get.fairport.io | sudo -E bash -
 ```
+
+## Fairport Version Upgrades
+
+> [!IMPORTANT]
+> Check the release changelogs before upgrading (https://github.com/fairport-io/fairport-io/releases).
+
+On a control-plane machine (or with a properly configured kubeconfig), patch the fairport `helmchart` object with the target version (https://github.com/fairport-io/fairport-io/releases):
+```shell
+# Change X.Y.Z to the target version:
+fpk patch helmchart fairport -n kube-system --type merge -p '{"spec":{"version":"X.Y.Z"}}'
+```
+
+## Common Configuration Options
+
+The installer supports all of the RKE2 environment variable configs (https://docs.rke2.io/reference/server_config).  These are some of the more common ones and Fairport configuration options:
+
+| Variable                   | Description |
+| :---                       | :---        |
+| `RKE2_TYPE`                | The type of node to install (`server` or `agent`). |
+| `RKE2_SERVER`              | The URL/IP of an existing server node (e.g., `https://<SERVER_IP>:9345`). **Required** if `RKE2_TYPE` is `agent`. |
+| `RKE2_TOKEN`               | The node token used to join the cluster. **Required** if `RKE2_TYPE` is `agent`. |
+| `RKE2_VERSION`             | The specific RKE2 release version to install (e.g., `v1.36.1+rke2r2`). |
+| `RKE2_CNI`                 | The Container Network Interface (CNI) plugin to install. |
+| `RKE2_CLUSTER_CIDR`        | The CIDR block(s) to use for pod IPs. Automatically detects IPv4/IPv6 defaults. |
+| `RKE2_SERVICE_CIDR`        | The CIDR block(s) to use for service IPs. Automatically detects IPv4/IPv6 defaults. |
+| `FAIRPORT_CHART_VERSION`   | The version of the Fairport Helm chart to install. |
+| `FAIRPORT_CHART_SOURCE`    | The Helm chart source repository/URL for Fairport. |
+| `FAIRPORT_CHART_NAMESPACE` | The dedicated namespace where Fairport components are installed. |
+| `FAIRPORT_CONFIG_FILE`     | Path to a custom YAML file containing Helm values for the Fairport installation. |
+| `FP_DEBUG`                 | Set to `true` to enable verbose bash debugging output (`set -x`). |
 
 ## Uninstall
 
@@ -167,6 +238,7 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Configuration Management** | Operators can manage and update the cluster using yaml configurations. These can be applied from a repo such as an IAC (Infrastructure as Code) git repository using a CI/CD system or manually with the kubectl tool. |
 | **Secret Management**        | The cluster can store and manage sensitive information such as passwords, API keys, and other secrets in a secure and centralized manner. |
 | **Role-Based Access Control (RBAC)** | Provides fine-grained access control to manage user permissions and access to cluster resources. |
+| **Hybrid Cloud**             | Mix and match onprem nodes, cloud nodes, and edge nodes to build your clusters (control-plane recommended to be in the same region or datacenter) |
 
 ## Limitations
 
@@ -206,7 +278,15 @@ People and/or organizations may want to manage their clusters using Infrastructu
 
 # Air-Gap
 
+> [!IMPORTANT]
+> Documentation of the air-gap process is a work-in-progres.  This feature may not be available for GA yet.
+
+> [!IMPORTANT]
+> Ensure that your target machine has at least double the amount of disk as the installer size.
+
 For installation in environments which are offline or with limmited internet connectivity.
 
-> [!NOTE]
-> Documentation WIP
+1. Download the installer tarball: (work-in-progres)
+2. Place the release file onto the target machine.  How this happens will depend heavily on each individual environment, but for simplicy tools like `scp` and `rsync` will work.
+3. Extract the contents: `sudo tar -xvPf fairport-airgap.tar.gz`
+4. Run the installer (The installer will take the same environment variables as the online installer): `sudo /usr/local/bin/fairport-airgap`
