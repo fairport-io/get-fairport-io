@@ -46,7 +46,7 @@ curl https://get.fairport.io | sudo bash -
 > ```
 > export RKE2_CLUSTER_CIDR="10.144.0.0/12"
 > export RKE2_SERVICE_CIDR="10.160.0.0/12"
-> curl https://get.fairport.io | sudo -E bash -
+> curl -sfL https://get.fairport.io | sudo -E bash -
 > ```
 > </details>
 
@@ -62,7 +62,7 @@ curl https://get.fairport.io | sudo bash -
 >   kube-prometheus-stack:
 >     enabled: false
 > EOF
-> curl https://get.fairport.io | sudo -E bash -
+> curl -sfL https://get.fairport.io | sudo -E bash -
 > ```
 > </details>
 
