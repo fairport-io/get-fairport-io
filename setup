@@ -268,8 +268,6 @@ spec:
     kubeProxyReplacement: true
     k8sServiceHost: "${DEFAULT_IPV4}"
     k8sServicePort: "6443"
-    devices: "${DEFAULT_IFACE}"
-    directRoutingDevice: "${DEFAULT_IFACE}"
     operator:
       replicas: 1
     encryption:
