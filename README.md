@@ -46,7 +46,7 @@ curl https://get.fairport.io | sudo bash -
 > ```
 > export RKE2_CLUSTER_CIDR="10.144.0.0/12"
 > export RKE2_SERVICE_CIDR="10.160.0.0/12"
-> curl https://get.fairport.io | sudo -E bash -
+> curl -sfL https://get.fairport.io | sudo -E bash -
 > ```
 > </details>
 
@@ -62,7 +62,7 @@ curl https://get.fairport.io | sudo bash -
 >   kube-prometheus-stack:
 >     enabled: false
 > EOF
-> curl https://get.fairport.io | sudo -E bash -
+> curl -sfL https://get.fairport.io | sudo -E bash -
 > ```
 > </details>
 
@@ -145,12 +145,23 @@ curl https://get.fairport.io | sudo -E bash -
 
 A full list of available versions is available here:  https://github.com/rancher/rke2/releases
 
-Once you have chosen a version, set the `RKE2_VERSION` environment variable and run the fairport installer:
+<details>
+<summary>Automatic Node Upgrades</summary>
+
+Use the system upgrade controller to automatically upgrade all nodes.  Setup a `Plan` and let the controller take care of the rest! [Docs](https://github.com/fairport-io/fairport-io/blob/main/charts/system-upgrade-controller/README.md)
+
+</details>
+
+<details>
+<summary>Manual Node Upgrades</summary>
+
+Once you have chosen a version, set the `RKE2_VERSION` environment variable and run the fairport installer (must be done on each node):
 
 ```shell
 export RKE2_VERSION=vX.Y.Z+rke2r1
 curl https://get.fairport.io | sudo -E bash -
 ```
+</details>
 
 ## Fairport Version Upgrades
 
