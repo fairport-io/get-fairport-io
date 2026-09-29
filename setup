@@ -372,6 +372,7 @@ stop () {
      run_cmd 'rm -rf /opt/cni/bin/ || true'
      run_cmd 'rm -rf /etc/cni/net.d/ || true'
      run_cmd 'rm -rf /sys/fs/bpf/tc/globals/* || true'
+     run_cmd 'rm -rf /usr/local/bin/fpk'
      exit 0
  }
 
