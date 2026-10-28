@@ -91,6 +91,8 @@ check_variables () {
     [ "$FAIRPORT_CHART_SOURCE"      ] || FAIRPORT_CHART_SOURCE="oci://ghcr.io/fairport-io/charts/fairport"
     [ "$FAIRPORT_CHART_NAMESPACE"   ] || FAIRPORT_CHART_NAMESPACE="fairport"
     [ "$RKE2_CNI" ]                   || RKE2_CNI=cilium
+    [ "$RKE2_CILIUM_ENCRYPTION" ]     || RKE2_CILIUM_ENCRYPTION=true
+    [ "$RKE2_CILIUM_NODE_ENCRYPTION" ] || RKE2_CILIUM_NODE_ENCRYPTION=true
 
     if [ ! "$RKE2_CLUSTER_CIDR" ]; then
         [ "$(ip -4 route show default)" ] && RKE2_CLUSTER_CIDR="100.64.0.0/12"
@@ -272,9 +274,9 @@ spec:
     operator:
       replicas: 1
     encryption:
-      enabled: true
+      enabled: ${RKE2_CILIUM_ENCRYPTION}
       type: wireguard
-      nodeEncryption: true
+      nodeEncryption: ${RKE2_CILIUM_NODE_ENCRYPTION}
 EOF
 
     info "Update coredns config"
