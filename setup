@@ -85,12 +85,12 @@ check_variables () {
     RKE2_BINARIES_DIR="/var/lib/rancher/rke2/bin"
     RKE2_BINARIES_BUNDLE_FILE="${RKE2_BINARIES_DIR}/rke2.${OS}-${ARCH}-${RKE2_VERSION}.tar.gz"
     RKE2_BINARY_FILE="/usr/local/bin/rke2"
+    RKE2_NODE_CONFIG="/etc/rancher/rke2/config.yaml"
     RKE2_KUBECONFIG="/etc/rancher/rke2/rke2.yaml"
     [ "$RKE2_TYPE" = "agent"        ] && RKE2_KUBECONFIG="/var/lib/rancher/rke2/agent/rke2controller.kubeconfig"
     [ "$FAIRPORT_CHART_VERSION"     ] || FAIRPORT_CHART_VERSION="1.0.4"
     [ "$FAIRPORT_CHART_SOURCE"      ] || FAIRPORT_CHART_SOURCE="oci://ghcr.io/fairport-io/charts/fairport"
     [ "$FAIRPORT_CHART_NAMESPACE"   ] || FAIRPORT_CHART_NAMESPACE="fairport"
-    [ "$RKE2_CNI" ]                   || RKE2_CNI=cilium
     [ "$RKE2_CILIUM_ENCRYPTION" ]     || RKE2_CILIUM_ENCRYPTION=false
     [ "$RKE2_CILIUM_NODE_ENCRYPTION" ] || RKE2_CILIUM_NODE_ENCRYPTION=false
 
@@ -198,8 +198,18 @@ EOF
 generate_rke2_config () {
     info "Generating rke2 config file"
     local NODE_NAME="$(echo $DEFAULT_IPV4 | tr '.' '-')-$(date +%s)"
+    # Joins from older helpers omit RKE2_CNI and keep the previous default.
+    local CNI="${RKE2_CNI:-cilium}"
+    if [ -z "$RKE2_CNI" ] && [ "$RKE2_BOOTSTRAP" = "true" ] &&
+       [ "$RKE2_TYPE" = "server" ] && [ -z "$RKE2_SERVER" ] &&
+       [ ! -d "$RKE2_NODE_CONFIG.d" ] && [ ! -d /var/lib/rancher/rke2/server ]; then
+        CNI=multus,cilium
+    fi
+
     mkdir -p /etc/rancher/rke2
-    cat << EOF > /etc/rancher/rke2/config.yaml
+    local NEW_CONFIG
+    NEW_CONFIG=$(mktemp "$RKE2_NODE_CONFIG.XXXXXX") || crit "Failed to create RKE2 config"
+    cat << EOF > "$NEW_CONFIG" || crit "Failed to write RKE2 config"
 write-kubeconfig-mode: "0600"
 node-name: "$NODE_NAME"
 node-ip: "${DEFAULT_IPV4}${DEFAULT_IPV6:+,$DEFAULT_IPV6}"
@@ -207,19 +217,22 @@ cluster-cidr: "$RKE2_CLUSTER_CIDR"
 service-cidr: "$RKE2_SERVICE_CIDR"
 etcd-expose-metrics: true
 etcd-arg: "quota-backend-bytes=4294967296"
-cni: "$RKE2_CNI"
+cni: "$CNI"
 disable-kube-proxy: true
 disable:
   - rke2-ingress-nginx
 ingress-controller: traefik
 EOF
-    chmod 600 /etc/rancher/rke2/config.yaml
-    [ "$RKE2_SERVER" ] && echo "server: $RKE2_SERVER" >> /etc/rancher/rke2/config.yaml
-    [ "$RKE2_TOKEN"  ] && echo "token: $RKE2_TOKEN" >> /etc/rancher/rke2/config.yaml
-    if systemctl is-active --quiet systemd-resolved && [ -f "/run/systemd/resolve/resolv.conf" ]; then
-        echo "kubelet-arg:" >> /etc/rancher/rke2/config.yaml
-        echo "- resolv-conf=/run/systemd/resolve/resolv.conf" >> /etc/rancher/rke2/config.yaml
+    if [ "$RKE2_SERVER" ]; then
+        echo "server: $RKE2_SERVER" >> "$NEW_CONFIG" || crit "Failed to write RKE2 server setting"
     fi
+    if [ "$RKE2_TOKEN" ]; then
+        echo "token: $RKE2_TOKEN" >> "$NEW_CONFIG" || crit "Failed to write RKE2 token setting"
+    fi
+    if systemctl is-active --quiet systemd-resolved && [ -f "/run/systemd/resolve/resolv.conf" ]; then
+        printf '%s\n' 'kubelet-arg:' '- resolv-conf=/run/systemd/resolve/resolv.conf' >> "$NEW_CONFIG" || crit "Failed to write RKE2 resolver settings"
+    fi
+    mv "$NEW_CONFIG" "$RKE2_NODE_CONFIG" || crit "Failed to save RKE2 config"
 }
 
 install_kubernetes () {
@@ -230,9 +243,13 @@ install_kubernetes () {
         run_cmd mkdir -p $RKE2_BINARIES_DIR/$RKE2_VERSION
         [ ! -f "$RKE2_BINARIES_BUNDLE_FILE" ] && run_cmd curl -sL $RKE2_BINARY_URL -o $RKE2_BINARIES_BUNDLE_FILE
         run_cmd tar -xf $RKE2_BINARIES_BUNDLE_FILE -C $RKE2_BINARIES_DIR/$RKE2_VERSION
+        # Existing servers may load their configuration from a different path or a drop-in.
+        if [ -z "$RKE2_CONFIG_FILE" ] && [ ! -e "$RKE2_NODE_CONFIG" ] && [ ! -L "$RKE2_NODE_CONFIG" ] &&
+           [ ! -d /var/lib/rancher/rke2/server/db ]; then
+            generate_rke2_config
+        fi
         run_cmd cp -f $RKE2_BINARIES_DIR/$RKE2_VERSION/bin/* /usr/local/bin/
         run_cmd cp -f $RKE2_BINARIES_DIR/$RKE2_VERSION/lib/systemd/system/rke2* /etc/systemd/system/
-        generate_rke2_config
     fi
 
     run_cmd systemctl daemon-reload
@@ -246,8 +263,32 @@ install_kubernetes () {
     run_cmd chmod +x /usr/local/bin/fpk
 
     info "Add script to simplify adding more nodes to the cluster"
-    echo -e '#!/bin/bash\n\n[ $(whoami) != root ] && echo "Failure, must be root" && exit 1\necho "[ \$(whoami) != root ] && echo \"Failure, must be root\" && exit 1 ; export RKE2_TYPE=server ; export RKE2_SERVER=https://$(ip route get 1 | sed -n '\''/src/{s/.*src *\([^ ]*\).*/\\1/p;q}'\''):9345 ; export RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) ; curl -s https://get.fairport.io | bash - || exit 1 ; history -d \$HISTCMD || true" ; exit 0' > /usr/local/bin/fp-add-server
-    [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fp-add-server"
+    if [ ! -e /usr/local/bin/fp-add-server ] && [ ! -L /usr/local/bin/fp-add-server ]; then
+        cat << 'EOF' > /usr/local/bin/fp-add-server
+#!/bin/bash
+
+[ "$EUID" != "0" ] && echo "Failure, must be root" && exit 1
+
+CNI_CHARTS=$(fpk -n kube-system get helmcharts -o name) || exit 1
+CNI=none
+for PLUGIN in canal cilium calico flannel; do
+    if grep -Fxq "helmchart.helm.cattle.io/rke2-$PLUGIN" <<< "$CNI_CHARTS"; then
+        CNI=$PLUGIN
+        break
+    fi
+done
+grep -Fxq helmchart.helm.cattle.io/rke2-multus <<< "$CNI_CHARTS" && CNI="multus,$CNI"
+
+SERVER_IP=$(ip route get 1 | sed -n -e '/src/s/.*src *\([^ ]*\).*/\1/p' -e '/src/q')
+NODE_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) || exit 1
+printf '%s ; %s ; %s ; %s\n' \
+    '[ $(whoami) != root ] && echo "Failure, must be root" && exit 1' \
+    "export RKE2_TYPE=server RKE2_SERVER=https://$SERVER_IP:9345 RKE2_TOKEN=$NODE_TOKEN" \
+    "export RKE2_CNI=\${RKE2_CNI:-$CNI}" \
+    'curl -s https://get.fairport.io | bash - || exit 1 ; history -d $HISTCMD || true'
+EOF
+        [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fp-add-server"
+    fi
     echo -e '#!/bin/bash\n\n[ $(whoami) != root ] && echo "Failure, must be root" && exit 1\necho "[ \$(whoami) != root ] && echo \"Failure, must be root\" && exit 1 ; export RKE2_TYPE=agent ; export RKE2_SERVER=https://$(ip route get 1 | sed -n '\''/src/{s/.*src *\([^ ]*\).*/\\1/p;q}'\''):9345 ; export RKE2_TOKEN=$(cat /var/lib/rancher/rke2/server/node-token) ; curl -s https://get.fairport.io | bash - || exit 1 ; history -d \$HISTCMD || true" ; exit 0' > /usr/local/bin/fp-add-agent
     [ $? -ne 0 ] && crit "Failed to create /usr/local/bin/fp-add-agent"
     run_cmd chmod +x /usr/local/bin/fp-add-server /usr/local/bin/fp-add-agent
@@ -258,8 +299,10 @@ install_kubernetes () {
     fi
     export PATH=$PATH:/usr/local/bin
 
-    info "Update cilium config"
-    cat << EOF > /var/lib/rancher/rke2/server/manifests/rke2-cilium-config.yaml
+    local CILIUM_CONFIG=/var/lib/rancher/rke2/server/manifests/rke2-cilium-config.yaml
+    if [ ! -e "$CILIUM_CONFIG" ] && [ ! -L "$CILIUM_CONFIG" ]; then
+        info "Write cilium config"
+        cat << EOF > "$CILIUM_CONFIG"
 ---
 apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
@@ -278,6 +321,7 @@ spec:
       type: wireguard
       nodeEncryption: ${RKE2_CILIUM_NODE_ENCRYPTION}
 EOF
+    fi
 
     info "Update coredns config"
     cat << EOF > /var/lib/rancher/rke2/server/manifests/rke2-coredns-config.yaml

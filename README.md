@@ -84,6 +84,8 @@ Log into a control-plane/server node and run one of the following commands to ge
 - **Agent/Worker**: `/usr/local/bin/fp-add-agent`
 - **Server/Control-plane**: `/usr/local/bin/fp-add-server`
 
+The server helper installed on new nodes carries over the cluster's CNI selection. For manual joins or commands from an older helper, set `RKE2_CNI` to match the existing servers.
+
 ### Using FP Node Manager
 <details>
 <summary>Work In Progress</summary>
@@ -161,6 +163,8 @@ Once you have chosen a version, set the `RKE2_VERSION` environment variable and 
 export RKE2_VERSION=vX.Y.Z+rke2r1
 curl https://get.fairport.io | sudo -E bash -
 ```
+
+The installer reuses the node's existing RKE2 and Cilium configuration during an upgrade.
 </details>
 
 ## Fairport Version Upgrades
@@ -184,7 +188,7 @@ The installer supports all of the RKE2 environment variable configs (https://doc
 | `RKE2_SERVER`              | The URL/IP of an existing server node (e.g., `https://<SERVER_IP>:9345`). **Required** if `RKE2_TYPE` is `agent`. |
 | `RKE2_TOKEN`               | The node token used to join the cluster. **Required** if `RKE2_TYPE` is `agent`. |
 | `RKE2_VERSION`             | The specific RKE2 release version to install (e.g., `v1.36.1+rke2r2`). |
-| `RKE2_CNI`                 | The Container Network Interface (CNI) plugin to install. |
+| `RKE2_CNI`                 | CNI selection for new clusters. Defaults to `multus,cilium`. Set `cilium` for Cilium alone. |
 | `RKE2_CLUSTER_CIDR`        | The CIDR block(s) to use for pod IPs. Automatically detects IPv4/IPv6 defaults. |
 | `RKE2_SERVICE_CIDR`        | The CIDR block(s) to use for service IPs. Automatically detects IPv4/IPv6 defaults. |
 | `FAIRPORT_CHART_VERSION`   | The version of the Fairport Helm chart to install. |
@@ -268,6 +272,10 @@ People and/or organizations may want to manage their clusters using Infrastructu
 | **Certificate Age**              | 1 Year    | No           | Certificates used by Kubelet and the Kubernetes API Server need to be rotated once every 365 days.  To generate new certificates, the system must restart the rke2 service.  If the cluster is routinely upgraded (as it should be) this will update certificates and it shouldn't be an issue.  If time between upgrades is more than one year, to manually rotate run: `systemctl restart rke2-agent` for workers and `systemctl restart rke2-server` for control-plane nodes. |
 
 ## Network
+
+New clusters use Cilium for the primary pod network and Multus for additional network interfaces. To attach a secondary interface to a KubeVirt VM, create a `NetworkAttachmentDefinition` and reference it from the VM. [KubeVirt networking guide](https://kubevirt.io/user-guide/network/interfaces_and_networks/#multus)
+
+When pinning an older RKE2 version, check its Cilium configuration requirements for Multus. [RKE2 Multus guide](https://docs.rke2.io/networking/multus_sriov#using-multus-with-cilium)
 
 > [!NOTE]
 > The default cluster configuration uses Cilium in VXLAN (Virtual Extensible Local Area Network) routing mode - the default for cilium on RKE2.  This means an overlay network is created on top of the nodes.  The rationale being:
